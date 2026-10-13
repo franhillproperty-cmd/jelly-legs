@@ -329,25 +329,40 @@ describe('Didn\'t stay sets the state and suggests one dial down, never two', ()
       { kind: 'dial', dial: 'words', from: 400, to: 200 });
   });
 
-  it('one stranger joining turns people down by one notch (Q5, Q11)', () => {
+  it('a toggle that is the one change is undone, whatever the dials (Q135)', () => {
+    const w = world();
+    w.settle();
+    const toggleOnly = w.add({ toggles: ['knowEveryone', 'microphone'] }).step;
+    assert.deepEqual(w.log(toggleOnly, { stayed: false, hardToStay: 9 }).advice, { kind: 'switchOff', key: 'microphone' });
+  });
+
+  it('a stranger swapped in for a friend gets "people you know" straight away (Q135)', () => {
+    const w = world();
+    w.settle({ people: 3 });
+    const { step } = w.add({ people: 3, toggles: [] });
+    assert.deepEqual(w.log(step, { stayed: false, hardToStay: 9 }).advice, { kind: 'switchOff', key: 'knowEveryone' });
+  });
+
+  it('one stranger joining is one change, undone by people you know (Q11, Q135)', () => {
     const w = world();
     w.settle({ people: 3 });
     const { step } = w.add({ people: 4, toggles: [] });
-    assert.deepEqual(w.log(step, { stayed: false, hardToStay: 9 }).advice, { kind: 'dial', dial: 'people', from: 4, to: 3 });
+    assert.deepEqual(w.log(step, { stayed: false, hardToStay: 9 }).advice, { kind: 'switchOff', key: 'knowEveryone' });
   });
 
-  it('asks which dial when more than one changed, none did, or nothing is settled (Q5)', () => {
+  it('asks when more than one thing changed, nothing did, or nothing is settled; the list holds dials that can go lower and toggles in their harder state (Q135)', () => {
     const w = world();
     const first = w.add({ words: 50, people: 3 }).step;
     assert.deepEqual(w.log(first, { stayed: false, hardToStay: 9 }).advice,
       { kind: 'ask', options: ['words', 'people', 'visibility'] });
     w.settle({ words: 25, people: 1 });
-    const two = w.add({ words: 50, people: 3 }).step;
-    assert.equal(w.log(two, { stayed: false, hardToStay: 9 }).advice.kind, 'ask');
-    const same = w.add({ words: 25, people: 1 }).step;
-    assert.equal(w.log(same, { stayed: false, hardToStay: 9 }).advice.kind, 'ask');
-    const toggleOnly = w.add({ toggles: ['knowEveryone', 'microphone'] }).step;
-    assert.equal(w.log(toggleOnly, { stayed: false, hardToStay: 9 }).advice.kind, 'ask');
+    const two = w.add({ words: 50, people: 3, toggles: [], ownItem: 'glasses' }).step;
+    assert.deepEqual(w.log(two, { stayed: false, hardToStay: 9 }).advice,
+      { kind: 'ask', options: ['words', 'people', 'visibility', 'knowEveryone', 'ownItem'] });
+    const same = w.add({ words: 25, people: 1, toggles: ['knowEveryone', 'standing'] }).step;
+    w.settle({ words: 25, people: 1, toggles: ['knowEveryone', 'standing'] });
+    assert.deepEqual(w.log(same, { stayed: false, hardToStay: 9 }).advice,
+      { kind: 'ask', options: ['words', 'people', 'visibility', 'standing'] });
   });
 
   it('shows the floor signpost when the step is already the floor (Q5)', () => {
@@ -788,7 +803,7 @@ describe('Feels-easy answered no keeps the step in planning', () => {
   it('keep-going needs both: the friends line on, and a stranger step (Q31)', () => {
     const off = world();
     off.settle({ people: 3 });
-    assert.deepEqual(off.add({ people: 4, toggles: [], feelsEasy: false }).advice, { kind: 'dial', dial: 'people', from: 4, to: 3 });
+    assert.deepEqual(off.add({ people: 4, toggles: [], feelsEasy: false }).advice, { kind: 'switchOff', key: 'knowEveryone' });
     const on = world();
     on.settle();
     on.settle();
@@ -1102,7 +1117,7 @@ describe('Starting values on a blank Add a step (Q16)', () => {
   });
 });
 
-describe('When no dial can go down, switch off a toggle or the own item (Q129)', () => {
+describe('When every dial is at its bottom, only toggles and the own item are left to turn down (Q129, Q135)', () => {
   const bottom = { words: 10, people: 0, visibility: 'notAtAll', matters: 'notMuch', toggles: [] };
 
   it('"10 words, alone, standing up" gets standing switched off, not the signpost', () => {
@@ -1126,28 +1141,24 @@ describe('When no dial can go down, switch off a toggle or the own item (Q129)',
     assert.deepEqual(p.advice, { kind: 'switchOff', key: 'microphone' });
   });
 
-  it('the person picks when none or several differ, or nothing is settled', () => {
+  it('the person picks, from toggles only, when none or several differ, or nothing is settled', () => {
     const w = world();
     const first = w.add({ ...bottom, toggles: ['questions', 'fromMemory'], feelsEasy: false });
-    assert.deepEqual(first.advice, { kind: 'askSwitchOff', options: ['fromMemory', 'questions'] });
+    assert.deepEqual(first.advice, { kind: 'ask', options: ['fromMemory', 'questions'] });
     w.settle({ ...bottom, toggles: ['standing'] });
     const two = w.add({ ...bottom, toggles: ['standing', 'microphone', 'recorded'], ownItem: 'glasses', feelsEasy: false });
-    assert.deepEqual(two.advice, { kind: 'askSwitchOff', options: ['standing', 'microphone', 'recorded', 'ownItem'] });
+    assert.deepEqual(two.advice, { kind: 'ask', options: ['standing', 'microphone', 'recorded', 'ownItem'] });
     w.settle({ ...bottom, toggles: ['standing', 'microphone'] });
     const none = w.add({ ...bottom, toggles: ['standing', 'microphone'], feelsEasy: false });
-    assert.deepEqual(none.advice, { kind: 'askSwitchOff', options: ['standing', 'microphone'] });
+    assert.deepEqual(none.advice, { kind: 'ask', options: ['standing', 'microphone'] });
   });
 
-  it('only one thing on: that one, whether or not anything is settled', () => {
-    const p = world().add({ ...bottom, toggles: ['fromMemory'], feelsEasy: false });
-    assert.deepEqual(p.advice, { kind: 'switchOff', key: 'fromMemory' });
-  });
-
-  it('never leaves the person an empty choice', () => {
+  it('never leaves the person an empty choice, and never offers "people you know" with nobody there', () => {
     for (const key of [...R.TOGGLES.filter(k => k !== 'knowEveryone'), 'ownItem']) {
       const step = { id: 'x', ...bottom, toggles: key === 'ownItem' ? [] : [key], ownItem: key === 'ownItem' ? 'hat' : '' };
-      assert.deepEqual(R.turnDownAdvice([], step), { kind: 'switchOff', key }, key);
+      assert.deepEqual(R.turnDownAdvice([], step), { kind: 'ask', options: [key] }, key);
     }
+    assert.deepEqual(R.turnDownOptions({ ...bottom, words: 25, toggles: [] }), ['words']);
   });
 });
 

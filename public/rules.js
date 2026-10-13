@@ -266,38 +266,37 @@ export function dialsThatCanGoDown(step) {
   return DIALS.filter(d => !(d === 'visibility' && step.people === 0) && notchDown(d, step[d]) !== null);
 }
 
-// The toggles switched on, in checklist order, then the own item if it isn't blank.
-function switchedOn(step) {
-  const on = TOGGLES.filter(k => hasToggle(step, k));
-  return norm(step.ownItem) !== '' ? [...on, 'ownItem'] : on;
+// Everything that can be turned down, in the order the person sees it (Q135): the dials
+// that can still go lower, then each toggle in its harder state (on; for "I know everyone
+// there", off with someone there), then the own item if it isn't blank.
+export function turnDownOptions(step) {
+  const toggles = TOGGLES.filter(k => (k === 'knowEveryone' ? step.people > 0 && !hasToggle(step, k) : hasToggle(step, k)));
+  return [...dialsThatCanGoDown(step), ...toggles, ...(norm(step.ownItem) !== '' ? ['ownItem'] : [])];
 }
 
-// What to suggest when a step needs to be smaller: after a didn't stay, after a
-// second hard stay, or after a "no" to the silly-easy question (Q5, Q129).
-// - the floor itself: the floor signpost
-// - exactly one dial got harder than the last settled step: that dial, one notch down
-// - some dial can still go down: ask the person which dial
-// - every dial is at its bottom, so a toggle or the own item keeps it off the floor:
-//   switch off the one that differs from the last settled step; otherwise the person
-//   picks which ("10 words, alone, standing up" becomes "try it sitting down")
+// Undo one thing: a dial one notch down, never two (L163), or a toggle or the own item
+// back to its easier state (Q129, Q134).
+export function turnDown(step, key) {
+  if (DIALS.includes(key)) return { kind: 'dial', dial: key, from: step[key], to: notchDown(key, step[key]) };
+  return { kind: 'switchOff', key };
+}
+
+// What to suggest when a step needs to be smaller: after a didn't stay, after a second
+// hard stay, or after a "no" to the silly-easy question. The thing that changed is the
+// thing that bit (Q5, Q129, Q135):
+// - the true floor: the floor signpost
+// - exactly one thing got harder than the last settled step, dial or toggle or own item:
+//   undo that one. One stranger joining is one thing, undone by people you know (Q11).
+// - nothing did, more than one did, or nothing is settled: ask, from turnDownOptions
 export function turnDownAdvice(steps, step) {
   if (isFloor(step)) return { kind: 'floor' };
   const base = lastSettledStep(steps, step.id);
-  const harder = base ? harderChanges(base, step).flatMap(c => c.parts.map(p => p.key)) : [];
-  const dials = [...new Set(harder.filter(k => DIALS.includes(k)))];
-  if (dials.length === 1) return turnDown(step, dials[0]);
-  const canGoDown = dialsThatCanGoDown(step);
-  if (canGoDown.length > 0) return { kind: 'ask', options: canGoDown };
-  const on = switchedOn(step);
-  const differs = on.filter(k => harder.includes(k));
-  if (differs.length === 1) return { kind: 'switchOff', key: differs[0] };
-  if (on.length === 1) return { kind: 'switchOff', key: on[0] };
-  return { kind: 'askSwitchOff', options: on };
-}
-
-// One dial, one notch down: never two (L163).
-export function turnDown(step, dial) {
-  return { kind: 'dial', dial, from: step[dial], to: notchDown(dial, step[dial]) };
+  const changes = base ? harderChanges(base, step) : [];
+  if (changes.length === 1) {
+    const keys = changes[0].parts.map(p => p.key);
+    return turnDown(step, keys.includes('knowEveryone') ? 'knowEveryone' : keys[0]);
+  }
+  return { kind: 'ask', options: turnDownOptions(step) };
 }
 
 // ---------------------------------------------------------------- notices
