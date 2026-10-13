@@ -2,7 +2,7 @@
 // screen with its rehearsal counter (L99-L101), Log an attempt (L102-L105) and the reply.
 
 import * as R from '../rules.js';
-import { h, textField, choices, rating, toggle, button, link, ask, tell, notice } from '../ui.js';
+import { h, textField, choices, rating, toggle, button, link, ask, tell, notice, confetti } from '../ui.js';
 import {
   FORM, ONE_THING, EARLY_CAUTION, SMALLER, SIGNPOST, STEP, LOG, REPLIES, LADDER, COMMON,
   TOGGLE_LABELS, OWN_ITEM_LABEL, VISIBILITY, MATTERS, UNITS,
@@ -461,7 +461,11 @@ export function logScreen(app, { id }) {
       app.setDirty(true);
       return;
     }
-    app.flash.reply = { reply: result.reply, advice: result.advice, step: result.data.steps.find(s => s.id === step.id) };
+    const { stateBefore, stateAfter } = result.attempt;
+    app.flash.reply = {
+      reply: result.reply, advice: result.advice, step: result.data.steps.find(s => s.id === step.id),
+      settled: stateBefore !== 'settled' && stateAfter === 'settled', // this attempt settled the step
+    };
     app.go('reply', { replace: true });
   };
 
@@ -492,5 +496,11 @@ export function replyScreen(app) {
       h('p', { class: 'lead', tabindex: '-1' }, REPLIES[r.reply]),
       r.advice ? adviceNodes(r.advice, r.step, { nextTime: true }) : null,
       button(COMMON.ok, done, { primary: true })),
+    // A step that has just settled gets a moment of confetti (the look stage), once.
+    after: () => {
+      if (!r.settled || r.celebrated) return;
+      r.celebrated = true;
+      confetti();
+    },
   };
 }

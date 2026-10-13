@@ -3,10 +3,16 @@
 
 import * as R from '../rules.js';
 import { h, button, link, panel, notice } from '../ui.js';
-import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON } from '../strings.js';
+import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON, QUIPS } from '../strings.js';
 import { rowText, stateText, formatDate, progressText, lastTimeText } from '../format.js';
 import { now, today } from '../store.js';
+import { sceneState } from '../scene.js';
+import { createScene } from '../scene-draw.js';
 import { ratingsList, signpost } from './parts.js';
+
+// Where the jelly was the last time the Ladder was drawn, so that coming back after a step
+// settles, it climbs from there rather than appearing at its new rung.
+let shown = null;
 
 export function ladderScreen(app) {
   const data = app.data();
@@ -14,6 +20,10 @@ export function ladderScreen(app) {
   const goal = person.situations.find(s => s.id === person.goalSituation);
   const on = R.notices(data);
   const order = R.ladderOrder(data.steps);
+  const state = sceneState(data);
+  const from = shown;
+  const scene = createScene(from ?? state);
+  shown = state;
 
   const notices = [
     on.tooBig ? notice(LADDER.notices.tooBig) : null,
@@ -28,6 +38,8 @@ export function ladderScreen(app) {
     tabs: 'ladder',
     node: h('div', { class: 'ladder' },
       h('h1', {}, LADDER.heading),
+      scene.element,
+      h('p', { class: 'quip' }, QUIPS[state.quip]),
       h('p', { class: 'goal' }, goal.text),
       h('p', { class: 'progress' }, progressText(person)),
       R.checkInDue(person, today()) ? checkIn(app) : null,
@@ -38,6 +50,10 @@ export function ladderScreen(app) {
     bar: h('div', { class: 'actionbar' },
       button(LADDER.addStep, () => app.go('add'), { primary: true }),
       button(LADDER.suggestStep, () => suggest(app))),
+    // Two frames on, so the old place has been drawn and the move shows.
+    after: () => {
+      if (from) requestAnimationFrame(() => requestAnimationFrame(() => scene.update(state)));
+    },
   };
 }
 

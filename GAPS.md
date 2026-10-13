@@ -127,6 +127,18 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 - The choices for what to turn down show dials by name (Length, People, Can see them, Matters) and everything else by its switch-off line (Q135).
 - Spoken labels a screen reader reads, not shown: each day on the Breathe strip ("Tuesday 13 Oct 2026: ticked"), and the ends of each 0 to 10 control ("0 easy, 10 nearly walked off").
 
+### The quips under the scene (the look stage), for Fran to rewrite
+
+All seven, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order is the builder's call):
+
+1. No steps yet: "Jelly legs, at the bottom, looking up."
+2. Every step settled: "On the stage, legs like concrete."
+3. The most recently logged attempt was a didn't stay: "Came back down. The ladder's still here." It stays until the next attempt is logged.
+4. All but one step settled (with at least two steps): "Nearly there. The lectern's looking smaller."
+5. Half or more settled: "Halfway up and the knees have mostly stopped knocking."
+6. A quarter or more settled: "Wobbling, climbing, still here."
+7. Otherwise, steps on the ladder but under a quarter settled: "One foot on the ladder. That counts."
+
 ## 3. Builder's calls, not in PLAN.md or the answers
 
 - With nobody there, Suggest doesn't offer "Can see them" (it is fixed at "not at all", Q8). Moving from nobody to one person leaves "Can see them" for the person to set on the form, so the suggestion card doesn't show it.
@@ -142,7 +154,20 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 - Colours (Q115): one orange, #F97316, the same in light and dark mode. On screen it reads as orange rather than red, so the warmer #FB8C1A wasn't needed. Text and marks on it are #1A1A1A (6.2:1). No text is orange: links and link-like controls (Back, Mark ready now, the outside links) keep the text colour with a 3px orange underline. The orange fills filled buttons, chosen options and ticked days; it is the current step's left edge, the active tab's top bar, and the edge of notices, the signposts, the check-in and the club line. Buttons that aren't filled have a grey edge (3:1 or more) and text in the text colour. The rehearsal box and notices sit on white (near-black in dark mode), not an orange tint. The orange against the off-white ground is 2.6:1, so nothing relies on it alone: words always carry their own contrast. The focus outline is in the text colour. The dark blue-grey for settled and didn't-stay steps is #475569 in light mode and lightened to #94A3B8 in dark mode (both over 7:1). test/colours.test.js checks every pairing, and that no rule colours text orange.
 - At the largest text sizes the bars at the top and bottom stop growing (about 22px text), so they never cover the screen; the tab bar wraps to two rows, and the 0 to 10 buttons wrap to as many rows as they need (each at least 48px).
 
+### The look stage
+
+- The scene sits under the Ladder heading and above the goal, with the quip under it. It is decoration, hidden from screen readers; the quip is ordinary text and is read.
+- The ladder in the drawing always has nine rungs, whatever the number of steps. The jelly stands on the rung nearest to settled steps out of all steps, so a quarter, a half and three quarters each land on a rung. With every step settled it is on the stage beside the lectern, facing the audience, with a bigger smile. With no steps it is on the bottom rung.
+- The jelly moves only when the Ladder is drawn: coming back after a step settles, it climbs from where it was last shown, in about a second. Adding a step can move it down a rung, since the share settled falls. The first time the app opens it is simply in place.
+- The wobble follows the most recent attempt where the person stayed, by when it was logged: full at a rating of 10, falling evenly to none at 2 (the easy line) and below. Before any stay, the legs wobble fully.
+- The audience's heads, faces and eyes turn to where the jelly is.
+- The scene uses the one orange for the jelly only; the curtain and the stage's edge are the blue-grey (#4F6F8F), with lighter and darker blue-greys and warm greys for the rest. In dark mode the scene's colours are darkened to match.
+- The Breathe circle sits under the exercise text and above the seven days. It swells over about two seconds (the breath in), pauses briefly, swells to full over about a second (the sip), then sinks over about six seconds: nine seconds a round. Start and Stop are the words from L80's rehearsal timer; the button reads Start until pressed. Once started it stays on if the person goes to another screen and comes back (starting again from the breath in), and is off again when the app is next opened. With less motion asked for, the circle sits still at its smallest and there is no button.
+- Confetti: 48 pieces, alternately the orange and the blue-grey, burst from the middle of the screen for one second, once, on the reply that follows the attempt where a step settles. None when less motion is asked for.
+
 ## 4. Not built yet
+
+- The look stage, second half: the bundled fonts (Fraunces for headings, Source Sans 3 for the body) and the palette everywhere (#FBF7F2 and #141210 grounds, 14px cards with a soft border, #4F6F8F for the quieter states). Waiting on Fran's go-ahead after seeing the scene and the circle.
 
 - Stage 3: the web app manifest and its icon (the ladder in bright orange on white, Q115), the hardened server, the Railway config.
 - Stage 4: started early. BUGS.md and TESTING.md exist since bug 1; stage 4 checks them.

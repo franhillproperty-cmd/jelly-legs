@@ -137,6 +137,8 @@ export const BREATHE = {
     some: n => `${n} of the last 7 days. Keep going; it's the practice that makes it work on the day.`,
     all: 'Seven out of seven. This is the one that\'ll be there when you need it.',
   },
+  start: 'Start', // the breathing circle's control: the same words as Time yourself (L80)
+  stop: 'Stop',
   practised: 'I practised today',
   alreadyTicked: 'Already ticked today.',
   untickQuestion: 'Un-tick today?',
@@ -221,6 +223,17 @@ export const LADDER = {
   empty: 'Your ladder starts here. Add a step, or let the app suggest one. This is the shape a ladder can take:', // Q75
   addStep: 'Add a step',
   suggestStep: 'Suggest a step',
+};
+
+// The quip under the Ladder's scene, chosen by progress (the look stage). Fran to rewrite.
+export const QUIPS = {
+  none: 'Jelly legs, at the bottom, looking up.',
+  firstStep: 'One foot on the ladder. That counts.',
+  didntStay: 'Came back down. The ladder\'s still here.',
+  quarter: 'Wobbling, climbing, still here.',
+  halfway: 'Halfway up and the knees have mostly stopped knocking.',
+  nearly: 'Nearly there. The lectern\'s looking smaller.',
+  top: 'On the stage, legs like concrete.',
 };
 
 // The example ladder (Q95): every row changes one thing from the row above.

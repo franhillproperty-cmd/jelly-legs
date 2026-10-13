@@ -13,6 +13,7 @@
   --orange: #f97316;        /* the one orange: fills, underlines, shapes */
   --on-orange: #1a1a1a;     /* text and marks on orange */
   --quiet: #475569;         /* dark blue-grey: settled and didn't-stay steps */
+  --blue-grey: #4f6f8f;     /* the look stage's blue-grey: confetti, the scene */
   --bg: #faf8f5;            /* off-white ground */
   --surface: #ffffff;
   --text: #1c1917;
@@ -391,4 +392,240 @@ textarea.input { min-height: 7rem; resize: vertical; }
 
 @media (prefers-reduced-motion: no-preference) {
   .button, .choice span, .tab { transition: background-color 120ms, color 120ms, border-color 120ms; }
+}
+
+/* ---------------------------------------------------------------- the look: breathing circle */
+
+/* It swells twice (the breath in, then the short sip), then sinks over about six seconds. */
+.breath { display: grid; place-items: center; height: 13rem; margin: 1rem 0 0.5rem; }
+.breath-glow {
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 2rem 0.5rem var(--orange);
+  transform: scale(0.6);
+}
+.breath.is-going .breath-glow { animation: breathe 9s infinite; }
+@keyframes breathe {
+  0% { transform: scale(0.6); animation-timing-function: ease-out; }
+  22% { transform: scale(0.84); animation-timing-function: linear; }   /* the breath in, 2 seconds */
+  27% { transform: scale(0.84); animation-timing-function: ease-out; } /* a moment */
+  35% { transform: scale(1); animation-timing-function: ease-in-out; } /* the sip that fills right up */
+  100% { transform: scale(0.6); }                                      /* out, slowly, about six seconds */
+}
+.breath-row { display: flex; justify-content: center; }
+
+/* ---------------------------------------------------------------- the look: confetti */
+
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 30; }
+.confetti i {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 8px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--c);
+  animation: confetti 1s ease-out forwards;
+}
+@keyframes confetti {
+  to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; }
+}
+
+/* Less motion: the circle sits still with no control, and there's no confetti. */
+@media (prefers-reduced-motion: reduce) {
+  .breath.is-going .breath-glow { animation: none; }
+  .breath-control { display: none; }
+  .confetti { display: none; }
+}
+
+/* ---------------------------------------------------------------- the look: the Ladder's scene */
+
+/* Every colour in the drawing is a custom property on .scene. The jelly is the one orange;
+   nothing else in the scene is orange. The curtain and the stage's edge are the blue-grey. */
+.scene {
+  --sc-jelly: var(--orange);
+  --sc-ink: var(--on-orange);
+  --sc-sheen: #ffffff;
+  --sc-panel: #f3ede6;
+  --sc-house: #eae4dd;
+  --sc-house-line: #d3cbc2;
+  --sc-backdrop: #e1e5ea;
+  --sc-boards: #d9d3cc;
+  --sc-board-line: #bdb6ae;
+  --sc-lip: var(--blue-grey);
+  --sc-lip-line: #7f99b3;
+  --sc-apron: #bcc6d0;
+  --sc-apron-line: #a8b4c1;
+  --sc-curtain: var(--blue-grey);
+  --sc-curtain-dark: #3c566f;
+  --sc-curtain-lit: #7a96b2;
+  --sc-ladder: #7a746e;
+  --sc-lectern: #3c566f;
+  --sc-lectern-shade: #2f4559;
+  --sc-lectern-top: #5d7c9a;
+  --sc-paper: #fbf7f2;
+  --sc-lamp: #2e3c4a;
+  --sc-sconce: #9aa9b8;
+  --sc-light: #fffcf5;
+  --sc-cone-top: 0.75;
+  --sc-cone-foot: 0.32;
+  --sc-pool: 0.95;
+  --sc-glow: 0.7;
+  --sc-crowd: #34485c;
+  --sc-eye: #fbf7f2;
+  --sc-pupil: #141210;
+
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.5rem 0 0;
+  border-radius: 14px;
+  background: var(--sc-panel);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scene {
+    --sc-panel: #1c1917;
+    --sc-house: #221f1c;
+    --sc-house-line: #3a3632;
+    --sc-backdrop: #1f252c;
+    --sc-boards: #48443f;
+    --sc-board-line: #5e5953;
+    --sc-lip: #6f8fae;
+    --sc-lip-line: #94adc6;
+    --sc-apron: #29323c;
+    --sc-apron-line: #343f4b;
+    --sc-curtain-dark: #3a536b;
+    --sc-curtain-lit: #7e9ab6;
+    --sc-ladder: #a9a19a;
+    --sc-lectern: #5b7a99;
+    --sc-lectern-shade: #4a6683;
+    --sc-lectern-top: #86a3bf;
+    --sc-paper: #f5f2ef;
+    --sc-lamp: #8c9daf;
+    --sc-sconce: #55687c;
+    --sc-light: #fff6e6;
+    --sc-cone-top: 0.42;
+    --sc-cone-foot: 0.12;
+    --sc-pool: 0.55;
+    --sc-glow: 0.16;
+    --sc-crowd: #50687f;
+    --sc-eye: #f5f2ef;
+  }
+}
+
+.quip { margin: 0.5rem 0 1rem; color: var(--muted); font-style: italic; text-align: center; }
+
+/* The set */
+.scene .sc-house { fill: var(--sc-house); }
+.scene .sc-house-line { stroke: var(--sc-house-line); stroke-width: 1; }
+.scene .sc-backdrop { fill: var(--sc-backdrop); }
+.scene .sc-boards { fill: var(--sc-boards); }
+.scene .sc-board-line { stroke: var(--sc-board-line); stroke-width: 0.7; }
+.scene .sc-lip { fill: var(--sc-lip); }
+.scene .sc-lip-line { stroke: var(--sc-lip-line); stroke-width: 0.8; }
+.scene .sc-apron { fill: var(--sc-apron); }
+.scene .sc-apron-shade { fill: var(--sc-apron-line); }
+.scene .sc-apron-line { stroke: var(--sc-apron-line); stroke-width: 1.2; }
+.scene .sc-curtain { fill: var(--sc-curtain); }
+.scene .sc-curtain-dark { fill: var(--sc-curtain-dark); }
+.scene .sc-curtain-fold { fill: none; stroke: var(--sc-curtain-dark); stroke-width: 1.3; stroke-linecap: round; }
+.scene .sc-curtain-lit { fill: none; stroke: var(--sc-curtain-lit); stroke-width: 1.3; stroke-linecap: round; }
+.scene .sc-curtain-lit-thin { fill: none; stroke: var(--sc-curtain-lit); stroke-width: 1; stroke-linecap: round; }
+.scene .sc-rail { stroke: var(--sc-ladder); stroke-width: 2.8; stroke-linecap: round; }
+.scene .sc-rung { stroke: var(--sc-ladder); stroke-width: 2.2; stroke-linecap: round; }
+.scene .sc-lectern { fill: var(--sc-lectern); }
+.scene .sc-lectern-shade { fill: var(--sc-lectern-shade); }
+.scene .sc-lectern-edge { stroke: var(--sc-lectern-top); stroke-width: 2.4; stroke-linecap: round; }
+.scene .sc-paper { fill: var(--sc-paper); }
+.scene .sc-lamp { fill: var(--sc-lamp); stroke: var(--sc-lamp); stroke-width: 1.4; stroke-linejoin: round; }
+.scene .sc-lamp-rod { stroke: var(--sc-lamp); stroke-width: 1.4; }
+.scene .sc-lens { fill: var(--sc-light); }
+.scene .sc-sconce-metal { fill: var(--sc-sconce); }
+
+/* The spotlight */
+.scene .sc-cone-top { stop-color: var(--sc-light); stop-opacity: var(--sc-cone-top); }
+.scene .sc-cone-foot { stop-color: var(--sc-light); stop-opacity: var(--sc-cone-foot); }
+.scene .sc-cone path { opacity: 0.45; }
+.scene .sc-pool-mid { stop-color: var(--sc-light); stop-opacity: var(--sc-pool); }
+.scene .sc-pool-half { stop-color: var(--sc-light); stop-opacity: calc(var(--sc-pool) * 0.6); }
+.scene .sc-pool-edge { stop-color: var(--sc-light); stop-opacity: 0; }
+.scene .sc-glow-mid { stop-color: var(--sc-light); stop-opacity: var(--sc-glow); }
+.scene .sc-glow-edge { stop-color: var(--sc-light); stop-opacity: 0; }
+
+/* The audience: their heads, faces and eyes turn to the jelly as it climbs. */
+.scene .sc-crowd { fill: var(--sc-crowd); }
+.scene .sc-shoulders { stroke: var(--sc-panel); stroke-width: 1.2; stroke-linejoin: round; }
+.scene .sc-eye { fill: var(--sc-eye); }
+.scene .sc-pupil { fill: var(--sc-pupil); }
+.scene .sc-head { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene .sc-head,
+.scene .sc-face,
+.scene .sc-pupils { transition: transform 1.2s cubic-bezier(.45,.05,.35,1); }
+
+/* The jelly */
+.scene .sc-jelly-body { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.4; stroke-linejoin: round; }
+.scene .sc-sheen { fill: none; stroke: var(--sc-sheen); stroke-width: 1.6; stroke-linecap: round; opacity: 0.6; }
+.scene .sc-ink { fill: var(--sc-ink); }
+.scene .sc-glint { fill: var(--sc-sheen); }
+.scene .sc-leg-edge { stroke: var(--sc-ink); stroke-width: 4.6; stroke-linecap: round; }
+.scene .sc-leg-fill { stroke: var(--sc-jelly); stroke-width: 2.2; stroke-linecap: round; }
+.scene .sc-foot { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.1; }
+.scene .sc-mouth-small { fill: none; stroke: var(--sc-ink); stroke-width: 1.3; stroke-linecap: round; }
+.scene .sc-mouth-big { fill: var(--sc-ink); opacity: 0; }
+.scene[data-place="stage"] .sc-mouth-small { opacity: 0; }
+.scene[data-place="stage"] .sc-mouth-big { opacity: 1; }
+
+/* Moving: the jelly (scene-draw.js sets each group's duration, delay and easing), its eyes
+   and its smile. */
+.scene .sc-jmove { transition: transform 1.2s cubic-bezier(.45,.05,.35,1); }
+.scene .sc-jelly-eyes { transition: transform 0.6s ease 0.6s; }
+.scene .sc-mouth { transition: opacity 0.4s ease 0.8s; }
+
+/* The wobble: the legs knock about their feet and the body jiggles, both scaled by
+   --wobble (0 to 1, set on the svg). Two identical sets of keyframes, so swapping between
+   them restarts the animation with the new amplitude. */
+.scene .sc-leg,
+.scene .sc-body { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene .sc-leg-l { animation: sc-knock-l-a 0.44s ease-in-out infinite alternate; }
+.scene .sc-leg-r { animation: sc-knock-r-a 0.44s ease-in-out infinite alternate; }
+.scene .sc-body { animation: sc-jiggle-a 0.44s ease-in-out infinite alternate; }
+.scene[data-wob="b"] .sc-leg-l { animation-name: sc-knock-l-b; }
+.scene[data-wob="b"] .sc-leg-r { animation-name: sc-knock-r-b; }
+.scene[data-wob="b"] .sc-body { animation-name: sc-jiggle-b; }
+.scene[data-still] .sc-leg,
+.scene[data-still] .sc-body { animation: none; }
+
+@keyframes sc-knock-l-a {
+  from { transform: rotate(calc(var(--wobble, 0) * -14deg)); }
+  to { transform: rotate(calc(var(--wobble, 0) * 14deg)); }
+}
+@keyframes sc-knock-r-a {
+  from { transform: rotate(calc(var(--wobble, 0) * 14deg)); }
+  to { transform: rotate(calc(var(--wobble, 0) * -14deg)); }
+}
+@keyframes sc-jiggle-a {
+  from { transform: scale(calc(1 + var(--wobble, 0) * 0.035), calc(1 - var(--wobble, 0) * 0.035)); }
+  to { transform: scale(calc(1 - var(--wobble, 0) * 0.02), calc(1 + var(--wobble, 0) * 0.02)); }
+}
+@keyframes sc-knock-l-b {
+  from { transform: rotate(calc(var(--wobble, 0) * -14deg)); }
+  to { transform: rotate(calc(var(--wobble, 0) * 14deg)); }
+}
+@keyframes sc-knock-r-b {
+  from { transform: rotate(calc(var(--wobble, 0) * 14deg)); }
+  to { transform: rotate(calc(var(--wobble, 0) * -14deg)); }
+}
+@keyframes sc-jiggle-b {
+  from { transform: scale(calc(1 + var(--wobble, 0) * 0.035), calc(1 - var(--wobble, 0) * 0.035)); }
+  to { transform: scale(calc(1 - var(--wobble, 0) * 0.02), calc(1 + var(--wobble, 0) * 0.02)); }
+}
+
+/* Less motion: nothing in the scene moves; everything sits in its final place. */
+@media (prefers-reduced-motion: reduce) {
+  .scene,
+  .scene * { animation: none !important; transition: none !important; }
 }

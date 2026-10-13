@@ -193,6 +193,25 @@ export function outLink(label, href) {
   return h('a', { href, target: '_blank', rel: 'noopener noreferrer', class: 'out' }, label);
 }
 
+// A one-second burst of orange and blue-grey confetti (the look stage). None when the phone
+// asks for less motion.
+export function confetti() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = h('div', { class: 'confetti', 'aria-hidden': 'true' });
+  for (let i = 0; i < 48; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const reach = 90 + Math.random() * 170;
+    const piece = h('i');
+    piece.style.setProperty('--c', i % 2 ? 'var(--orange)' : 'var(--blue-grey)');
+    piece.style.setProperty('--x', `${Math.round(Math.cos(angle) * reach)}px`);
+    piece.style.setProperty('--y', `${Math.round(Math.sin(angle) * reach + 120)}px`);
+    piece.style.setProperty('--r', `${Math.round(Math.random() * 720 - 360)}deg`);
+    box.append(piece);
+  }
+  document.body.append(box);
+  setTimeout(() => box.remove(), 1000);
+}
+
 export function notice(...children) {
   return h('div', { class: 'notice', role: 'status' }, ...children);
 }

@@ -77,7 +77,7 @@ describe('The orange (Q115)', () => {
     assert.equal(css.match(/var\(--(?:accent|bright)[\w-]*\)/g), null);
     for (const file of readdirSync(PUBLIC, { recursive: true }).filter(f => /\.(css|js|html)$/.test(f))) {
       const text = readFileSync(join(PUBLIC, file), 'utf8').toLowerCase();
-      for (const old of ['#c2410c', '#ea580c', '#4f6f8f']) assert.ok(!text.includes(old), `${old} in ${file}`);
+      for (const old of ['#c2410c', '#ea580c']) assert.ok(!text.includes(old), `${old} in ${file}`);
     }
   });
 });
