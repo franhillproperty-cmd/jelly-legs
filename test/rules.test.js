@@ -541,6 +541,12 @@ describe('A rehearsed-enough answer of no starts the next step\'s run-throughs a
     assert.equal(R.startingTarget(w.data.attempts).target, 3);
   });
 
+  it('still stands after that step\'s dials change: it is about rehearsal habit, not one step (Q133)', () => {
+    const w = needMore();
+    w.data = R.commitStep(w.data, w.edit(w.data.steps[0], { words: 50 }));
+    assert.equal(R.blankDraft(w.data).draft.rehearsalTarget, 6);
+  });
+
   it('an edit doesn\'t use it up (Q44)', () => {
     const w = needMore();
     const edit = w.edit(w.data.steps[0], { title: 'Edited' });

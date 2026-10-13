@@ -722,3 +722,25 @@ For the one-thing check, 75 words is exactly halfway between the 50 and 100 notc
 
 **132. An attempt dated in the future.** (Q48, Q76)
 **Answer:** Block them in the picker and keep a message for the case where the picker can't (some browsers let the person type a date). Words: "An attempt can't be dated in the future."
+
+**133. The plus two after a step's dials change.** (Q44, Q130)
+**Answer:** Keep it. The plus two is about the person's rehearsal habit, not about one step, so "I needed more" still stands after that step's dials change. The next new step starts at that attempt's recorded run-through count plus two (or 3 if higher), exactly as now.
+
+**134. Switch-off wording, one per toggle.** (Q129)
+**Answer:** In the same shape as "try it sitting down". List them in GAPS.md with the rest of the wording so Fran can rewrite any in her voice.
+- I'll be standing up: "Try it sitting down."
+- I know everyone there: "Try it with people you know." (Only offered when there's someone there; this toggle's harder state is off, so turning it down means switching it on.)
+- There's a microphone: "Try it without the microphone."
+- It's being recorded or filmed: "Try it with nothing recording."
+- I'm speaking from memory rather than reading: "Try it reading from the page."
+- There'll be questions afterwards: "Try it without questions afterwards."
+- I'll be introduced by name: "Try it without being introduced."
+- I'll be wearing or using something I don't usually: "Try it in what you'd usually wear or use."
+- Their own item: "Try it without this: [their words]."
+
+**135. When can "Try it with people you know" ever be offered?** (Q5, Q129, Q134)
+Under 129, toggles are only switched off when every dial is at its bottom, and that means nobody is there, when "I know everyone there" is ignored (Q8). So as the rules stand, this suggestion can never appear. The same goes for any switch-off suggestion on a step with people in it. Example: the last settled step was 3 friends; the new step swaps one friend for a stranger (still 3 people, "I know everyone there" off) and gets a didn't stay. Q5 says ask which dial, because no dial changed. Options:
+(a) Leave the rules as they are; the wording is kept but only shows at the bottom of every dial.
+(b) Whenever the only thing that got harder since the last settled step is a toggle or the own item, suggest switching it off ("the thing that changed is the thing that bit"), whatever the dials are.
+(c) When the app asks which dial, also offer the toggles that are on as things to switch off.
+**Answer:**
