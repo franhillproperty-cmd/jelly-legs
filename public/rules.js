@@ -313,16 +313,16 @@ export function currentAttempts(step, attempts) {
 // that. `attempt` is the one that turned it on, for the rating shown beside Suggest.
 export function tooBigNotice(steps, attempts) {
   const read = steps.flatMap(s => currentAttempts(s, attempts));
-  let trigger = null;
+  let turnedOnBy = null;
   const seen = new Set();
   for (const a of sortedByLogged(read)) {
     const first = !seen.has(a.stepId);
     seen.add(a.stepId);
-    if (!a.stayed) trigger = trigger ?? a;
-    else if (a.hardToStay > EASY_LINE) { if (first) trigger = trigger ?? a; }
-    else trigger = null;
+    if (!a.stayed) turnedOnBy = turnedOnBy ?? a;
+    else if (a.hardToStay > EASY_LINE) { if (first) turnedOnBy = turnedOnBy ?? a; }
+    else turnedOnBy = null;
   }
-  return { on: trigger !== null, attempt: trigger };
+  return { on: turnedOnBy !== null, attempt: turnedOnBy };
 }
 
 // Find somewhere (L90, Q28): the venue is still "Friends and family for now" and some
