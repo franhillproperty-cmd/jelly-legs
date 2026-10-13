@@ -705,3 +705,20 @@ With 0 people settled, Suggest offers 1; one "no" gives 0, and a second "no" goe
 **128. [N] and [distractor].** (L86, 100)
 These use square brackets like the one real gap, but they're filled with live values (a number, the person's distractor), not placeholders. Please confirm.
 **Answer:** Confirmed: live values, not placeholders. On screen they are the real number and the person's own distractor.
+
+## M. Raised while building stage 1
+
+**129. No dial left to turn down.** (Q5, Q7, Q35)
+"10 words, alone, standing up": every dial is at its bottom, but the toggle keeps it off the floor, so "turn one dial down" has nothing to offer.
+**Answer:** When every dial is at its bottom but a toggle or the own item is on, "turn one dial down" means switch one of those off: the toggle that differs from the last settled step if there is one, otherwise the person picks which. The therapist line appears only at the true floor, which is 10 words or fewer, nobody there, not much, no toggles on, own item blank (answer 7). So "10 words, alone, standing up" gets "try it sitting down", not the signpost.
+
+**130. Attempts from before a dial edit.** (Q2, Q3, Q15, Q25, L41)
+After a step's dials change, do its old attempts still count for reply three, its first stay, the too-big notice and the friends line?
+**Answer:** No. When a step's dials change, the attempts before that moment become history only. They stay visible on the Step screen, but none of the rules read them: "first stay", reply two versus three, the too-big notice and the friends rule all look only at attempts logged after the dials last changed. The step is a new step with its old notes attached. Use the "when its dials last changed" field already added.
+
+**131. Halfway word counts.** (Q9)
+For the one-thing check, 75 words is exactly halfway between the 50 and 100 notches.
+**Answer:** Yes. Halfway rounds to the higher notch. The one-thing check should warn when in doubt, and 50 to 75 words is more words, so treating 75 as the 100 notch is right.
+
+**132. An attempt dated in the future.** (Q48, Q76)
+**Answer:** Block them in the picker and keep a message for the case where the picker can't (some browsers let the person type a date). Words: "An attempt can't be dated in the future."

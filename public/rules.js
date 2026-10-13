@@ -168,7 +168,8 @@ export function notchDown(dial, value) {
 }
 
 // For the one-thing check, words compare by nearest notch, so 25 to 26 is no change
-// and 25 to 50 is one (Q9). Halfway between two notches counts as the higher one.
+// and 25 to 50 is one (Q9). Halfway between two notches counts as the higher one, so the
+// check warns when in doubt (Q131).
 export function nearestWordsNotch(words) {
   let best = NOTCHES.words[0];
   for (const n of NOTCHES.words) if (Math.abs(words - n) <= Math.abs(words - best)) best = n;
@@ -265,19 +266,33 @@ export function dialsThatCanGoDown(step) {
   return DIALS.filter(d => !(d === 'visibility' && step.people === 0) && notchDown(d, step[d]) !== null);
 }
 
+// The toggles switched on, in checklist order, then the own item if it isn't blank.
+function switchedOn(step) {
+  const on = TOGGLES.filter(k => hasToggle(step, k));
+  return norm(step.ownItem) !== '' ? [...on, 'ownItem'] : on;
+}
+
 // What to suggest when a step needs to be smaller: after a didn't stay, after a
-// second hard stay, or after a "no" to the silly-easy question (Q5).
+// second hard stay, or after a "no" to the silly-easy question (Q5, Q129).
 // - the floor itself: the floor signpost
 // - exactly one dial got harder than the last settled step: that dial, one notch down
-// - otherwise: ask the person which dial, offering the dials that can still go down
+// - some dial can still go down: ask the person which dial
+// - every dial is at its bottom, so a toggle or the own item keeps it off the floor:
+//   switch off the one that differs from the last settled step; otherwise the person
+//   picks which ("10 words, alone, standing up" becomes "try it sitting down")
 export function turnDownAdvice(steps, step) {
   if (isFloor(step)) return { kind: 'floor' };
   const base = lastSettledStep(steps, step.id);
-  const dials = base
-    ? [...new Set(harderChanges(base, step).flatMap(c => c.parts.map(p => p.key)).filter(k => DIALS.includes(k)))]
-    : [];
+  const harder = base ? harderChanges(base, step).flatMap(c => c.parts.map(p => p.key)) : [];
+  const dials = [...new Set(harder.filter(k => DIALS.includes(k)))];
   if (dials.length === 1) return turnDown(step, dials[0]);
-  return { kind: 'ask', options: dialsThatCanGoDown(step) };
+  const canGoDown = dialsThatCanGoDown(step);
+  if (canGoDown.length > 0) return { kind: 'ask', options: canGoDown };
+  const on = switchedOn(step);
+  const differs = on.filter(k => harder.includes(k));
+  if (differs.length === 1) return { kind: 'switchOff', key: differs[0] };
+  if (on.length === 1) return { kind: 'switchOff', key: on[0] };
+  return { kind: 'askSwitchOff', options: on };
 }
 
 // One dial, one notch down: never two (L163).
@@ -287,13 +302,21 @@ export function turnDown(step, dial) {
 
 // ---------------------------------------------------------------- notices
 
-// Too big (L33, Q25, Q26): on after a step's first attempt is a hard stay, or after any
-// didn't stay; off only when a stay rated at or under the easy line is logged after that.
-// `attempt` is the one that turned it on, for the rating shown beside Suggest.
-export function tooBigNotice(attempts) {
+// When a step's dials change, its earlier attempts become history only: still shown on the
+// Step screen, but no rule reads them (Q130). These are the attempts the rules read.
+const counts = (step, a) => a.stepId === step.id && (step.resizedAt === null || a.createdAt > step.resizedAt);
+export function currentAttempts(step, attempts) {
+  return sortedByLogged(attempts.filter(a => counts(step, a)));
+}
+
+// Too big (L33, Q25, Q26, Q130): on after a step's first attempt is a hard stay, or after
+// any didn't stay; off only when a stay rated at or under the easy line is logged after
+// that. `attempt` is the one that turned it on, for the rating shown beside Suggest.
+export function tooBigNotice(steps, attempts) {
+  const read = steps.flatMap(s => currentAttempts(s, attempts));
   let trigger = null;
   const seen = new Set();
-  for (const a of sortedByLogged(attempts)) {
+  for (const a of sortedByLogged(read)) {
     const first = !seen.has(a.stepId);
     seen.add(a.stepId);
     if (!a.stayed) trigger = trigger ?? a;
@@ -321,13 +344,13 @@ export function ropeLength(person) {
   return (baselineRating(person, 'strangers') ?? 0) >= HIGH_STRANGERS ? ROPE_FOR_HIGH_STRANGERS : ROPE;
 }
 
-// A step's first stay is its first attempt of any kind (Q2).
-export function firstAttempt(attempts, stepId) {
-  return sortedByLogged(attempts.filter(a => a.stepId === stepId))[0] ?? null;
+// A step's first stay is its first attempt of any kind since its dials last changed (Q2, Q130).
+export function firstAttempt(step, attempts) {
+  return currentAttempts(step, attempts)[0] ?? null;
 }
 
 export function settledOnEasyFirstStay(step, attempts) {
-  const first = firstAttempt(attempts, step.id);
+  const first = firstAttempt(step, attempts);
   return step.state === 'settled' && !!first && first.stayed && first.hardToStay <= EASY_LINE;
 }
 
@@ -343,7 +366,7 @@ export function friendsLine(data) {
 
 // All Ladder notices, in the order they stack (L90). Worked out fresh every time (Q27).
 export function notices(data) {
-  const tooBig = tooBigNotice(data.attempts);
+  const tooBig = tooBigNotice(data.steps, data.attempts);
   return {
     tooBig: tooBig.on,
     tooBigAttempt: tooBig.attempt,
@@ -547,7 +570,7 @@ export function prepareStep(data, draft, { editingId = null, now }) {
     };
   } else if (resized) {
     // A changed dial or toggle makes it a fresh step to size and rehearse; attempts stay (Q15).
-    // resizedAt marks where its new history starts.
+    // From resizedAt on it is a new step with its old notes attached (Q130).
     saved = {
       ...existing, ...step, suggested: existing.suggested, settledAt: null, resizedAt: now,
       state: step.feelsEasy ? 'rehearsing' : 'planning',
@@ -718,7 +741,7 @@ export function logAttempt(data, stepId, input, { now, today }) {
   const errors = validateAttempt(input, today);
   if (Object.keys(errors).length) return { ok: false, errors };
 
-  const earlier = sortedByLogged(data.attempts.filter(a => a.stepId === stepId));
+  const earlier = currentAttempts(step, data.attempts); // since the dials last changed (Q130)
   const reply = !input.stayed ? 'didntStay'
     : input.hardToStay <= EASY_LINE ? 'easy'
     : hardStaysSinceEasy(earlier) > 0 ? 'hardAgain' : 'hard';
@@ -746,8 +769,8 @@ export function logAttempt(data, stepId, input, { now, today }) {
 }
 
 // Delete an attempt (Q24) and work the step out again from what's left (Q125): replay the
-// step's remaining attempts since it was last resized, starting from the state it had
-// before the first of them. Attempts from before a resize no longer shape its state.
+// step's remaining attempts since its dials last changed, starting from the state it had
+// before the first of them. Attempts from before that are history only (Q130).
 // A replayed step that ends up rehearsing is ready if its run-throughs say so.
 // Notices follow, being worked out fresh.
 export function deleteAttempt(data, attemptId) {
@@ -755,10 +778,9 @@ export function deleteAttempt(data, attemptId) {
   if (!deleted) return data;
   const attempts = data.attempts.filter(a => a.id !== attemptId);
   const step = data.steps.find(s => s.id === deleted.stepId);
-  const inHistory = a => a.stepId === step.id && (step.resizedAt === null || a.createdAt >= step.resizedAt);
-  if (!inHistory(deleted)) return { ...data, attempts };
+  if (!counts(step, deleted)) return { ...data, attempts };
 
-  const history = sortedByLogged(data.attempts.filter(inHistory));
+  const history = currentAttempts(step, data.attempts);
   let current = { state: history[0].stateBefore, settledAt: history[0].settledAtBefore };
   const replayed = new Map();
   for (const a of history) {

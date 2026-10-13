@@ -415,7 +415,8 @@ describe('More than one thing changed since the last settled step, dials or togg
     assert.equal(check({ words: 25 }, { words: 50 }).changes.length, 1);
     assert.equal(R.nearestWordsNotch(37), 25);
     assert.equal(R.nearestWordsNotch(1500), 1000);
-    assert.equal(R.nearestWordsNotch(75), 100); // halfway: the higher notch, pending Fran
+    assert.equal(R.nearestWordsNotch(75), 100); // halfway counts as the higher notch (Q131)
+    assert.equal(check({ words: 50 }, { words: 75 }).changes.length, 1);
   });
 
   it('"I know everyone there" going off is harder; going on is not (Q9)', () => {
@@ -1092,6 +1093,109 @@ describe('Starting values on a blank Add a step (Q16)', () => {
     assert.equal(d.distractor, 'music with lyrics');
     assert.equal(d.where, 'Leeds Toastmasters');
     assert.deepEqual([d.words, d.people, d.visibility, d.matters, d.feelsEasy], [null, null, null, null, null]);
+  });
+});
+
+describe('When no dial can go down, switch off a toggle or the own item (Q129)', () => {
+  const bottom = { words: 10, people: 0, visibility: 'notAtAll', matters: 'notMuch', toggles: [] };
+
+  it('"10 words, alone, standing up" gets standing switched off, not the signpost', () => {
+    const w = world();
+    w.settle(bottom);
+    const p = w.add({ ...bottom, toggles: ['standing'], feelsEasy: false });
+    assert.deepEqual(p.advice, { kind: 'switchOff', key: 'standing' });
+  });
+
+  it('the own item that differs, after a didn\'t stay', () => {
+    const w = world();
+    w.settle(bottom);
+    const { step } = w.add({ ...bottom, ownItem: 'new shoes' });
+    assert.deepEqual(w.log(step, { stayed: false, hardToStay: 9 }).advice, { kind: 'switchOff', key: 'ownItem' });
+  });
+
+  it('the one that differs, even with others on', () => {
+    const w = world();
+    w.settle({ ...bottom, toggles: ['standing'] });
+    const p = w.add({ ...bottom, toggles: ['standing', 'microphone'], feelsEasy: false });
+    assert.deepEqual(p.advice, { kind: 'switchOff', key: 'microphone' });
+  });
+
+  it('the person picks when none or several differ, or nothing is settled', () => {
+    const w = world();
+    const first = w.add({ ...bottom, toggles: ['questions', 'fromMemory'], feelsEasy: false });
+    assert.deepEqual(first.advice, { kind: 'askSwitchOff', options: ['fromMemory', 'questions'] });
+    w.settle({ ...bottom, toggles: ['standing'] });
+    const two = w.add({ ...bottom, toggles: ['standing', 'microphone', 'recorded'], ownItem: 'glasses', feelsEasy: false });
+    assert.deepEqual(two.advice, { kind: 'askSwitchOff', options: ['standing', 'microphone', 'recorded', 'ownItem'] });
+    w.settle({ ...bottom, toggles: ['standing', 'microphone'] });
+    const none = w.add({ ...bottom, toggles: ['standing', 'microphone'], feelsEasy: false });
+    assert.deepEqual(none.advice, { kind: 'askSwitchOff', options: ['standing', 'microphone'] });
+  });
+
+  it('only one thing on: that one, whether or not anything is settled', () => {
+    const p = world().add({ ...bottom, toggles: ['fromMemory'], feelsEasy: false });
+    assert.deepEqual(p.advice, { kind: 'switchOff', key: 'fromMemory' });
+  });
+
+  it('never leaves the person an empty choice', () => {
+    for (const key of [...R.TOGGLES.filter(k => k !== 'knowEveryone'), 'ownItem']) {
+      const step = { id: 'x', ...bottom, toggles: key === 'ownItem' ? [] : [key], ownItem: key === 'ownItem' ? 'hat' : '' };
+      assert.deepEqual(R.turnDownAdvice([], step), { kind: 'switchOff', key }, key);
+    }
+  });
+});
+
+describe('After the dials change, earlier attempts are history only (Q130)', () => {
+  it('the first hard stay at the new size gets reply two, not three', () => {
+    const w = world();
+    w.settle({ people: 1 });
+    const { step } = w.add({ people: 2 });
+    w.log(step, { stayed: true, hardToStay: 6 });
+    w.log(step, { stayed: true, hardToStay: 6 });
+    w.data = R.commitStep(w.data, w.edit(step, { people: 1, words: 10 }));
+    const r = w.log(step, { stayed: true, hardToStay: 6 });
+    assert.equal(r.reply, 'hard');
+    assert.equal(r.advice, null);
+  });
+
+  it('the first stay at the new size decides the too-big notice', () => {
+    const w = world();
+    const s = w.settle();
+    w.data = R.commitStep(w.data, w.edit(s, { words: 50 }));
+    w.log(s, { stayed: true, hardToStay: 7 });
+    assert.equal(R.notices(w.data).tooBig, true);
+  });
+
+  it('a didn\'t stay from before the change no longer keeps the notice on', () => {
+    const w = world();
+    const { step } = w.add({ words: 50 });
+    w.log(step, { stayed: false, hardToStay: 9 });
+    assert.equal(R.notices(w.data).tooBig, true);
+    w.data = R.commitStep(w.data, w.edit(step, { words: 25 }));
+    assert.equal(R.notices(w.data).tooBig, false);
+  });
+
+  it('a step settled again after a hard first stay at its new size doesn\'t count for the friends line', () => {
+    const w = world();
+    w.settle();
+    const b = w.settle();
+    assert.equal(R.notices(w.data).friendsOnly, true);
+    w.data = R.commitStep(w.data, w.edit(b, { words: 50 }));
+    w.log(b, { stayed: true, hardToStay: 5 });
+    w.log(b, { stayed: true, hardToStay: 1 });
+    assert.equal(w.step(b.id).state, 'settled');
+    assert.equal(R.settledOnEasyFirstStay(w.step(b.id), w.data.attempts), false);
+    assert.equal(R.notices(w.data).friendsOnly, false);
+  });
+
+  it('the old attempts are kept for the Step screen', () => {
+    const w = world();
+    const s = w.settle();
+    w.data = R.commitStep(w.data, w.edit(s, { words: 50 }));
+    w.log(s, { stayed: true, hardToStay: 4 });
+    assert.equal(w.data.attempts.length, 2);
+    assert.equal(R.currentAttempts(w.step(s.id), w.data.attempts).length, 1);
+    assert.equal(R.firstAttempt(w.step(s.id), w.data.attempts).hardToStay, 4);
   });
 });
 
