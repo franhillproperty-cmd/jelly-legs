@@ -1437,6 +1437,21 @@ describe('Set-up and the goal (L81, Q52, Q59)', () => {
     assert.deepEqual(e, { ratings: { kind: 'required' } });
   });
 
+  it('a goal typed in the person\'s own words joins the situations, must be rated, and its rating is the baseline (L82, BUGS.md 1)', () => {
+    const own = { id: 'own-1', text: 'Speaking at my sister\'s wedding', own: true };
+    const setup = {
+      venue: 'Kitchen', town: '', pace: { choice: 'average' }, goalSituation: own.id,
+      situations: [...R.SITUATIONS.map(id => ({ id, text: id, own: false })), own],
+      ratings: Object.fromEntries(R.SITUATIONS.map(id => [id, 4])),
+    };
+    assert.deepEqual(R.validateSetup(setup), { ratings: { kind: 'required' } });
+    const rated = { ...setup, ratings: { ...setup.ratings, [own.id]: 6 } };
+    assert.deepEqual(R.validateSetup(rated), {});
+    const person = R.createPerson(rated, { now: at(0), today: TODAY });
+    assert.equal(person.goalSituation, own.id);
+    assert.deepEqual(R.progress(person), { baseline: 6, latest: null, weeks: null });
+  });
+
   it('the goal can only be changed to a situation already rated', () => {
     const person = makePerson();
     assert.equal(R.setGoal(person, 'toast').goalSituation, 'toast');

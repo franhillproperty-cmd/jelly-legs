@@ -74,10 +74,22 @@ export function setupScreen(app) {
 
   // The box for a situation in the person's own words (L81). It has no wording yet, so its
   // label is a bracketed placeholder.
+  // Enter in either box, or its Add button, adds what's typed; Save adds anything still
+  // typed and not yet added, so nothing the person typed is ignored (BUGS.md 1).
+  const onEnter = add => e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    add();
+  };
   const ownId = nextId('own');
-  const ownInput = h('input', { class: 'input', type: 'text', id: ownId });
+  const ownInput = h('input', {
+    class: 'input', type: 'text', id: ownId, enterkeyhint: 'done', oninput: touched,
+    onkeydown: onEnter(() => addTyped(ownInput, false)),
+  });
   let list = null;
-  const addOwn = (text, asGoal) => {
+  // A situation in the person's own words joins the list, to be rated like the others; as
+  // the goal, that rating is its baseline (L81, L82). Focus moves to its rating.
+  const addOwn = (text, asGoal, { focus = true } = {}) => {
     const clean = text.trim();
     if (!clean) return;
     const id = `own-${R.makeId()}`;
@@ -86,7 +98,12 @@ export function setupScreen(app) {
     touched();
     drawSituations();
     drawGoal();
-    list.groups[list.groups.length - 1].querySelector('input').focus(); // its rating comes next
+    if (focus) list.groups[list.groups.length - 1].querySelector('input').focus();
+  };
+  const addTyped = (input, asGoal, options) => {
+    const text = input.value;
+    input.value = '';
+    addOwn(text, asGoal, options);
   };
   const drawSituations = () => {
     list = ratingsList({
@@ -108,20 +125,21 @@ export function setupScreen(app) {
       ratingsError,
       list,
       h('label', { for: ownId, class: 'add-label' }, SETUP.ownSituation),
-      h('div', { class: 'add-row' }, ownInput, button(COMMON.add, () => {
-        addOwn(ownInput.value, false);
-        ownInput.value = '';
-      }, { small: true })),
+      h('div', { class: 'add-row' }, ownInput, button(COMMON.add, () => addTyped(ownInput, false), { small: true })),
       clarifying);
     drawClarifying();
   };
 
-  // Field 5: the goal, one of the situations or the person's own words (L82). The box for
-  // the person's own goal is described by the hint above the list.
+  // Field 5: the goal, one of the situations or the person's own words (L82): "Pick one of
+  // the situations above, or type your own (which is added to the list and rated)".
   const goal = h('section', { class: 'field' });
   let goalGroup = null;
   const goalHintId = nextId('goal-hint');
-  const goalInput = h('input', { class: 'input', type: 'text', 'aria-label': SETUP.goalHint, 'aria-describedby': goalHintId });
+  const goalId = nextId('goal-own');
+  const goalInput = h('input', {
+    class: 'input', type: 'text', id: goalId, 'aria-describedby': goalHintId, enterkeyhint: 'done', oninput: touched,
+    onkeydown: onEnter(() => addTyped(goalInput, true)),
+  });
   const drawGoal = () => {
     goalGroup = choices({
       legend: SETUP.goalLabel, columns: 1,
@@ -130,16 +148,19 @@ export function setupScreen(app) {
       onChange: id => { draft.goalSituation = id; touched(); },
     });
     goalGroup.querySelector('legend').after(h('p', { class: 'hint', id: goalHintId }, SETUP.goalHint));
-    fill(goal, goalGroup, h('div', { class: 'add-row' }, goalInput, button(COMMON.add, () => {
-      addOwn(goalInput.value, true);
-      goalInput.value = '';
-    }, { small: true })));
+    fill(goal, goalGroup,
+      h('label', { for: goalId, class: 'add-label' }, SETUP.ownGoal),
+      h('div', { class: 'add-row' }, goalInput, button(COMMON.add, () => addTyped(goalInput, true), { small: true })));
   };
 
   drawSituations();
   drawGoal();
 
   const save = () => {
+    // Typed but not yet added: a goal of the person's own becomes the goal, and joins the
+    // list to be rated; a situation of their own joins the list (BUGS.md 1).
+    if (ownInput.value.trim()) addTyped(ownInput, false, { focus: false });
+    if (goalInput.value.trim()) addTyped(goalInput, true, { focus: false });
     const errors = R.validateSetup(draft);
     venue.setError(errors.venue && COMMON.required);
     pace.setError(errors.pace && COMMON.required);

@@ -109,6 +109,7 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 | L45 | `VENUE.placesIntro` | Other places where speaking for under a minute is normal: |
 | L45 | `VENUE.anyRoom` | Any room where you're allowed to say a few words out loud will do. |
 | L79 | `SETUP.townHint` | Used only to fill in the three searches. |
+| L82 | `SETUP.ownGoal` | Or type your own (the label of the box for a goal in your own words) |
 | L95 | `FORM.pasteText`, `.wordCount` | Paste the text (optional) / Word count |
 | L37 | `FORM.checklist` | Things that change without being noticed |
 | L37 | `TOGGLE_LABELS` | The eight checklist items, each with a capital letter. |

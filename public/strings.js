@@ -83,6 +83,7 @@ export const SETUP = {
   ends: { low: 'not at all', high: 'unbearable' }, // L43, Q88
   goalLabel: 'What do you want to be able to do by the end?',
   goalHint: 'Pick one of the situations above, or type your own.', // L82, Q88
+  ownGoal: 'Or type your own', // L82: the label of the box for a goal in the person's own words
   savedBanner: 'Start here, learn this first.', // L83, Q74
 };
 
