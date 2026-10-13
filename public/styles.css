@@ -2,18 +2,16 @@
    so the phone's text-size setting carries through, tap targets at least 48px, and the
    phone's light or dark mode followed.
 
-   Colours (Q115): a deep orange for buttons, links and anything with text on it, at least
-   4.5:1 against the ground in both modes; a bright orange only for larger shapes with no
-   text (the ticked days, the current step's marker, the notice edge); an off-white ground
-   in light mode and a near-black one in dark; a dark blue-grey for the quieter states
-   (settled, didn't stay). test/colours.test.js checks every pairing below. */
+   Colours (Q115): one bright orange, the same in light and dark mode, wherever orange
+   appears. Text on orange is near-black, never white. No text is coloured orange: links
+   and labels stay in the normal text colour, and orange marks them with a fill, an
+   underline or a shape. An off-white ground in light mode and a near-black one in dark;
+   a dark blue-grey for the quieter states (settled, didn't stay).
+   test/colours.test.js checks every pairing below. */
 
 :root {
-  --accent: #c2410c;        /* deep orange: buttons, links, text */
-  --accent-ink: #ffffff;    /* text on the deep orange */
-  --accent-soft: #fff3ea;   /* a tint behind text, e.g. the rehearsal box */
-  --bright: #f97316;        /* bright orange: shapes with no text */
-  --bright-ink: #1c1917;    /* the tick on a ticked day */
+  --orange: #f97316;        /* the one orange: fills, underlines, shapes */
+  --on-orange: #1a1a1a;     /* text and marks on orange */
   --quiet: #475569;         /* dark blue-grey: settled and didn't-stay steps */
   --bg: #faf8f5;            /* off-white ground */
   --surface: #ffffff;
@@ -22,8 +20,6 @@
   --border: #d6d3d1;
   --input-border: #78716c;
   --error: #b91c1c;
-  --notice-bg: var(--accent-soft);
-  --notice-edge: var(--bright);
   --tap: 3rem;
   --gap: 1rem;
   --radius: 0.75rem;
@@ -34,13 +30,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* On near-black, #C2410C would be 3.6:1, so dark mode uses a lighter deep orange to
-       keep 4.5:1, with near-black text on it. The blue-grey is lightened for the same reason. */
-    --accent: #ea580c;
-    --accent-ink: #151311;
-    --accent-soft: #26190f;
-    --bright: #f97316;
-    --bright-ink: #151311;
+    /* The orange and the text on it stay the same. The blue-grey is lightened so it
+       reads on near-black. */
     --quiet: #94a3b8;
     --bg: #151311;          /* near-black ground */
     --surface: #1f1c1a;
@@ -85,7 +76,7 @@ h1 { font-size: 1.75rem; line-height: 1.2; margin: 1.25rem 0 0.75rem; }
 h2 { font-size: 1.2rem; line-height: 1.3; margin: 1.5rem 0 0.5rem; }
 h1:focus, main:focus { outline: none; }
 p { margin: 0 0 0.75rem; }
-blockquote { margin: 0 0 0.75rem; padding-left: 0.75rem; border-left: 3px solid var(--accent); }
+blockquote { margin: 0 0 0.75rem; padding-left: 0.75rem; border-left: 3px solid var(--orange); }
 ul, ol { padding-left: 1.25rem; }
 
 .visually-hidden {
@@ -104,22 +95,22 @@ ul, ol { padding-left: 1.25rem; }
   min-height: var(--tap);
   margin: 0.5rem 0;
   padding: 0.65rem 12px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--input-border);
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--accent);
+  color: var(--text);
   font: inherit;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
 }
-.button.primary { background: var(--accent); color: var(--accent-ink); }
-.button.quiet { border-color: var(--border); color: var(--text); font-weight: 500; }
+.button.primary { background: var(--orange); border-color: var(--orange); color: var(--on-orange); }
+.button.quiet { font-weight: 500; }
 .button.small { display: inline-block; width: auto; min-height: var(--tap); padding: 0.4rem 12px; margin: 0.4rem 0.4rem 0.4rem 0; }
 .button:disabled { opacity: 0.45; cursor: default; }
 .button:focus-visible, .link:focus-visible, a:focus-visible, .input:focus-visible,
 .choice input:focus-visible + span, .toggle input:focus-visible + span {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--text);
   outline-offset: 2px;
 }
 
@@ -129,14 +120,20 @@ ul, ol { padding-left: 1.25rem; }
   padding: 0.6rem 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--text);
   font: inherit;
   font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 0.2em;
   cursor: pointer;
 }
-a { color: var(--accent); }
+/* Links and link-like buttons keep the text colour; orange marks them with an underline. */
+.link, a, .back {
+  text-decoration-line: underline;
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.25em;
+}
+a { color: var(--text); }
 a.out { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0.6rem 0; font-weight: 600; }
 
 .field, .group { margin: 1.25rem 0; }
@@ -189,12 +186,12 @@ textarea.input { min-height: 7rem; resize: vertical; }
   cursor: pointer;
 }
 .choices.cols-1 .choice span { justify-content: flex-start; text-align: left; }
-.choice input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.choice input:checked + span { background: var(--orange); border-color: var(--orange); color: var(--on-orange); font-weight: 600; }
 .choices.is-disabled .choice span, .choice.is-disabled span { opacity: 0.5; cursor: default; }
 .ends { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem; }
 
 .toggle { display: flex; align-items: center; gap: 0.75rem; min-height: var(--tap); padding: 0.4rem 0; cursor: pointer; }
-.toggle input { width: 1.5rem; height: 1.5rem; flex: none; accent-color: var(--accent); margin: 0; }
+.toggle input { width: 1.5rem; height: 1.5rem; flex: none; accent-color: var(--orange); margin: 0; }
 .toggle.is-disabled { opacity: 0.5; }
 
 .add-label { display: block; font-weight: 600; margin: 1rem 0 0.35rem; }
@@ -210,12 +207,12 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .notice {
   margin: 0.75rem 0;
   padding: 0.75rem 16px;
-  border-left: 4px solid var(--notice-edge);
+  border-left: 4px solid var(--orange);
   border-radius: 0 var(--radius) var(--radius) 0;
-  background: var(--notice-bg);
+  background: var(--surface);
 }
 .notice p:last-child { margin-bottom: 0; }
-.signpost { margin: 0.75rem 0; padding: 0.75rem 16px; border: 2px solid var(--accent); border-radius: var(--radius); }
+.signpost { margin: 0.75rem 0; padding: 0.75rem 16px; border: 2px solid var(--orange); border-radius: var(--radius); }
 .help { margin-top: 0.75rem; color: var(--text); }
 .places { margin: 0 0 0.75rem; }
 .places li { margin: 0.2rem 0; }
@@ -242,7 +239,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
   color: var(--text);
   text-decoration: none;
 }
-.step-row.current a { border-left: 8px solid var(--bright); } /* the current step's marker (Q115) */
+.step-row.current a { border-left: 8px solid var(--orange); } /* the current step's marker (Q115) */
 .step-row.quiet a { background: transparent; color: var(--quiet); border-color: var(--quiet); border-style: dashed; }
 .step-row .title, .example .title { font-weight: 700; }
 .values, .date { color: var(--muted); font-size: 0.95rem; }
@@ -251,13 +248,13 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .state { font-size: 0.9rem; font-weight: 600; }
 .step-row.quiet .title { font-weight: 600; }
 .example li { margin: 0.5rem 0; border-style: dashed; background: transparent; }
-.checkin { margin: 1rem 0; padding: 0 16px 0.5rem; border: 2px solid var(--accent); border-radius: var(--radius); background: var(--surface); }
+.checkin { margin: 1rem 0; padding: 0 16px 0.5rem; border: 2px solid var(--orange); border-radius: var(--radius); background: var(--surface); }
 
 /* ---------------------------------------------------------------- the step */
 
 .step > .state { margin-bottom: 1rem; }
 .pasted { white-space: pre-wrap; padding: 16px; background: var(--surface); border-radius: var(--radius); margin-bottom: 1rem; }
-.rehearsal { margin: 1rem 0; padding: 16px; border-radius: var(--radius); background: var(--accent-soft); }
+.rehearsal { margin: 1rem 0; padding: 16px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); }
 .why { font-style: italic; }
 .counter { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; }
 .count { font-weight: 700; margin: 0; }
@@ -267,7 +264,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .attempts li { padding: 0.75rem 0; border-top: 1px solid var(--border); }
 .attempt-head { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-weight: 600; }
 .note-label { color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0 0; }
-.learning { margin-top: 1.5rem; padding: 0.75rem 16px; border-radius: var(--radius); background: var(--accent-soft); }
+.learning { margin-top: 1.5rem; padding: 0.75rem 16px; border-left: 4px solid var(--orange); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface); }
 .changes { padding-left: 1.25rem; }
 
 /* ---------------------------------------------------------------- breathe */
@@ -290,14 +287,14 @@ textarea.input { min-height: 7rem; resize: vertical; }
   display: grid;
   place-items: center;
 }
-.strip .ticked .mark { background: var(--bright); border-color: var(--bright); color: var(--bright-ink); }
+.strip .ticked .mark { background: var(--orange); border-color: var(--orange); }
 /* The tick is drawn, not typed, so no phone can swap in a coloured emoji for it. */
 .strip .ticked .mark::after {
   content: "";
   width: 28%;
   height: 52%;
   margin-top: -12%;
-  border: solid var(--bright-ink);
+  border: solid var(--on-orange);
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
@@ -320,7 +317,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
   padding: 0.6rem 0.25rem;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -362,7 +359,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
   text-align: center;
   border-top: 3px solid transparent;
 }
-.tab[aria-current="page"] { color: var(--accent); border-top-color: var(--bright); }
+.tab[aria-current="page"] { color: var(--text); border-top-color: var(--orange); }
 
 /* ---------------------------------------------------------------- dialogs and panels */
 

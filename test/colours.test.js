@@ -1,20 +1,19 @@
-// Colour contrast (Q115, L132): every colour pairing the app uses for text meets 4.5:1, in
-// light and dark mode. The values are read from public/styles.css, so changing a colour
-// there is checked here.
+// Colour contrast (Q115, L132): one bright orange, with near-black text on it, never white;
+// no text coloured orange; every text pairing at least 4.5:1, in light and dark mode. The
+// values are read from public/styles.css, so changing a colour there is checked here.
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const css = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
+const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
+const css = readFileSync(join(PUBLIC, 'styles.css'), 'utf8');
 
 function tokens(block) {
   const found = {};
-  for (const [, name, value] of block.matchAll(/--([\w-]+):\s*([^;]+);/g)) found[name] = value.trim();
-  for (const [name, value] of Object.entries(found)) {
-    const ref = value.match(/^var\(--([\w-]+)\)$/);
-    if (ref) found[name] = found[ref[1]];
-  }
+  for (const [, name, value] of block.matchAll(/--([\w-]+):\s*([^;]+);/g)) found[name] = value.trim().toLowerCase();
   return found;
 }
 
@@ -33,24 +32,19 @@ export function contrast(a, b) {
 
 // [foreground, background, minimum, what it is]
 const TEXT = 4.5;
-const SHAPE = 3; // non-text: control borders, a tick on a shape (WCAG 1.4.11)
+const SHAPE = 3; // non-text: control edges (WCAG 1.4.11)
 const PAIRS = [
-  ['text', 'bg', TEXT, 'body text'],
-  ['text', 'surface', TEXT, 'text on cards and inputs'],
-  ['text', 'accent-soft', TEXT, 'text in the rehearsal box and notices'],
+  ['on-orange', 'orange', TEXT, 'text on orange: filled buttons, chosen options, the tick on a ticked day'],
+  ['text', 'bg', TEXT, 'body text, links and labels'],
+  ['text', 'surface', TEXT, 'text on cards, inputs, notices and the rehearsal box'],
   ['muted', 'bg', TEXT, 'hints and secondary text'],
   ['muted', 'surface', TEXT, 'secondary text on cards'],
-  ['muted', 'accent-soft', TEXT, 'the answers line in the rehearsal box'],
-  ['accent', 'bg', TEXT, 'deep orange links and button edges on the ground'],
-  ['accent', 'surface', TEXT, 'deep orange on cards and outline buttons'],
-  ['accent', 'accent-soft', TEXT, 'links in the rehearsal box'],
-  ['accent-ink', 'accent', TEXT, 'text on filled buttons and chosen options'],
   ['quiet', 'bg', TEXT, 'settled and didn\'t-stay steps'],
   ['error', 'bg', TEXT, 'error messages'],
   ['error', 'surface', TEXT, 'error messages on cards'],
-  ['input-border', 'bg', SHAPE, 'text box and choice edges'],
-  ['input-border', 'surface', SHAPE, 'text box edges on white'],
-  ['bright-ink', 'bright', SHAPE, 'the tick on a ticked day'],
+  ['input-border', 'bg', SHAPE, 'edges of text boxes, choices and buttons'],
+  ['input-border', 'surface', SHAPE, 'edges of text boxes on white'],
+  ['text', 'bg', SHAPE, 'the focus outline'],
 ];
 
 for (const [mode, palette] of [['light', light], ['dark', dark]]) {
@@ -64,11 +58,26 @@ for (const [mode, palette] of [['light', light], ['dark', dark]]) {
   });
 }
 
-describe('The palette Q115 asks for', () => {
-  it('deep orange for text, bright orange for shapes, off-white and near-black grounds', () => {
-    assert.equal(light.accent.toLowerCase(), '#c2410c');
-    assert.equal(light.bright.toLowerCase(), '#f97316');
+describe('The orange (Q115)', () => {
+  it('is one bright orange, the same in both modes, with near-black on it', () => {
+    assert.equal(light.orange, '#f97316');
+    assert.equal(dark.orange, light.orange);
+    assert.equal(light['on-orange'], '#1a1a1a');
+    assert.equal(dark['on-orange'], light['on-orange']);
     assert.ok(luminance(light.bg) > 0.9, 'light ground is off-white');
     assert.ok(luminance(dark.bg) < 0.01, 'dark ground is near-black');
+  });
+
+  it('never colours text: no rule sets color to orange; links are underlined in orange instead', () => {
+    assert.equal(css.match(/(?:^|[\s;{])color:\s*var\(--orange\)/g), null);
+    assert.match(css, /text-decoration-color:\s*var\(--orange\)/);
+  });
+
+  it('nothing white sits on orange, and no other orange is left anywhere in the app', () => {
+    assert.equal(css.match(/var\(--(?:accent|bright)[\w-]*\)/g), null);
+    for (const file of readdirSync(PUBLIC, { recursive: true }).filter(f => /\.(css|js|html)$/.test(f))) {
+      const text = readFileSync(join(PUBLIC, file), 'utf8').toLowerCase();
+      for (const old of ['#c2410c', '#ea580c', '#4f6f8f']) assert.ok(!text.includes(old), `${old} in ${file}`);
+    }
   });
 });

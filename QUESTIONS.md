@@ -653,7 +653,7 @@ There, a plain download often opens a preview instead of saving the file.
 **Answer:** Yes.
 
 **115. Looks.** System fonts, neutral colours with one accent, follows the phone's dark mode, strong contrast, tap targets at least 48px, and a words-only tab bar. Settled and didn't-stay steps shown in grey.
-**Answer:** (Replaced 13 Oct 2026.) Accent colour: orange. Use a deep orange (around #C2410C) for buttons, links and anything with text on it, checked for 4.5:1 contrast against the ground in both light and dark mode, and a bright orange (around #F97316) only for larger shapes with no text, such as the ticked days and the current step's marker. Ground: off-white in light mode, near-black in dark mode. Secondary colour for the quieter states (settled, didn't stay): a dark blue-grey. Icon: the ladder in bright orange on white.
+**Answer:** (Replaced twice, 13 Oct 2026; this is the current answer.) Accent colour: orange. Use one bright orange (#F97316, or warmer if it still reads red: #FB8C1A) everywhere orange appears. Text on orange is near-black (#1A1A1A), never white. No text is coloured orange; links and labels stay in the normal text colour, and orange marks them with a fill, an underline or a shape instead. Drop the deep orange (#C2410C) entirely. Check every orange surface for 4.5:1 contrast with its dark text in both light and dark mode. Ground: off-white in light mode, near-black in dark mode. Secondary colour for the quieter states (settled, didn't stay): a dark blue-grey. Icon: the ladder in bright orange on white.
 
 **116. The icon.** I draw a plain shape (a simple ladder), make the PNG files with a small script, and list it in GAPS.md for you to replace.
 **Answer:** Yes.
