@@ -31,7 +31,7 @@ export function venueField({ value, getTown, onChange }) {
       h('p', {}, outLink(VENUE.toastmastersLink, VENUE.toastmastersUrl)),
       searches,
       h('p', {}, VENUE.anyRoom)));
-  return field;
+  return Object.assign(field, { friends });
 }
 
 // A search button shows the query in an editable box with the town filled in, and Go

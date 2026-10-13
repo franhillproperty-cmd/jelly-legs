@@ -31,6 +31,7 @@ Run the unit tests from the project folder with `node --test`.
 - [ ] Add a step that turns two dials; see the warning; turn one back. Press Suggest a step, pick people, say no twice, say yes; see it on the ladder, editable
   - Note (Q127): this needs a settled step with at least two people. Note (Q34): each no greys out that dial, so pick another dial for the next go.
 - [ ] Log a didn't stay; see the no-blame message and the smaller step suggestion
+- [ ] Settings: change the venue. Its Save button lights up; press it and it greys out again; leave Settings and come back to see the new venue. Clear the box and press Save: it says "Needed before you can save." Type a change and tap another tab without saving: the app asks before discarding. Do the same for the town, saving with Enter. (Added for BUGS.md 2.)
 - [ ] Export, delete everything, import; see the ladder return
 - [ ] Add to home screen; open from the icon
 - [ ] Phone text size at largest: nothing overlaps or gets cut off

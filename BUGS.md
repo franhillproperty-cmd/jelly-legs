@@ -2,6 +2,15 @@
 
 Every bug found while testing, newest first: what happened, why, what changed, and how to check it stays fixed.
 
+## 2. Settings: no way to see how to save the venue
+
+- **Found:** 13 Oct 2026, by Fran, testing on her phone.
+- **What happened:** In Settings, under "Where will you speak regularly?", there was no Save button, so there was no visible way to keep a new venue. The same went for "Your town".
+- **Why:** Both boxes saved silently when you left them, with nothing on screen to show it. That was a builder's call, not something answer 50 or 51 asked for.
+- **Fix:** Each box has its own Save button, greyed out until what's typed differs from what's saved. Enter saves too. An empty venue isn't saved and says "Needed before you can save." Leaving with unsaved typing asks before discarding (Q63). Pace and goal still save the moment you choose, since the choice shows on screen.
+- **Commit:** "Fix: Settings has a Save button for the venue and the town".
+- **Check:** the hand test "Settings: change the venue" in TESTING.md.
+
 ## 1. Set-up: a goal typed in your own words was ignored
 
 - **Found:** 13 Oct 2026, by Fran, testing stage 2.
