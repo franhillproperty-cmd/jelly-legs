@@ -1,20 +1,29 @@
 /* Jelly Legs. Phone first: designed at 375px, checked at 320px. System fonts, sizes in rem
    so the phone's text-size setting carries through, tap targets at least 48px, and the
-   phone's light or dark mode followed. The accent is airforce blue until Fran picks one. */
+   phone's light or dark mode followed.
+
+   Colours (Q115): a deep orange for buttons, links and anything with text on it, at least
+   4.5:1 against the ground in both modes; a bright orange only for larger shapes with no
+   text (the ticked days, the current step's marker, the notice edge); an off-white ground
+   in light mode and a near-black one in dark; a dark blue-grey for the quieter states
+   (settled, didn't stay). test/colours.test.js checks every pairing below. */
 
 :root {
-  --accent: #4f6f8f;
-  --accent-ink: #ffffff;
-  --accent-soft: #edf2f7;
-  --bg: #f6f5f2;
+  --accent: #c2410c;        /* deep orange: buttons, links, text */
+  --accent-ink: #ffffff;    /* text on the deep orange */
+  --accent-soft: #fff3ea;   /* a tint behind text, e.g. the rehearsal box */
+  --bright: #f97316;        /* bright orange: shapes with no text */
+  --bright-ink: #1c1917;    /* the tick on a ticked day */
+  --quiet: #475569;         /* dark blue-grey: settled and didn't-stay steps */
+  --bg: #faf8f5;            /* off-white ground */
   --surface: #ffffff;
-  --text: #1c2024;
-  --muted: #565d64;
-  --border: #d3d6da;
-  --input-border: #80878f;
-  --error: #a3262c;
-  --notice-bg: #fdf4dc;
-  --notice-edge: #b58a1a;
+  --text: #1c1917;
+  --muted: #57534e;
+  --border: #d6d3d1;
+  --input-border: #78716c;
+  --error: #b91c1c;
+  --notice-bg: var(--accent-soft);
+  --notice-edge: var(--bright);
   --tap: 3rem;
   --gap: 1rem;
   --radius: 0.75rem;
@@ -25,18 +34,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #8fb1d1;
-    --accent-ink: #0d1822;
-    --accent-soft: #22303d;
-    --bg: #121518;
-    --surface: #1b1f23;
-    --text: #eceff1;
-    --muted: #a7afb6;
-    --border: #3a4148;
-    --input-border: #6b747d;
-    --error: #ff9a9e;
-    --notice-bg: #33291a;
-    --notice-edge: #d6ad4a;
+    /* On near-black, #C2410C would be 3.6:1, so dark mode uses a lighter deep orange to
+       keep 4.5:1, with near-black text on it. The blue-grey is lightened for the same reason. */
+    --accent: #ea580c;
+    --accent-ink: #151311;
+    --accent-soft: #26190f;
+    --bright: #f97316;
+    --bright-ink: #151311;
+    --quiet: #94a3b8;
+    --bg: #151311;          /* near-black ground */
+    --surface: #1f1c1a;
+    --text: #f5f2ef;
+    --muted: #b5aea8;
+    --border: #3a3633;
+    --input-border: #7a736d;
+    --error: #f87171;
   }
 }
 
@@ -230,10 +242,12 @@ textarea.input { min-height: 7rem; resize: vertical; }
   color: var(--text);
   text-decoration: none;
 }
-.step-row.current a { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.step-row.quiet a { background: transparent; color: var(--muted); }
+.step-row.current a { border-left: 8px solid var(--bright); } /* the current step's marker (Q115) */
+.step-row.quiet a { background: transparent; color: var(--quiet); border-color: var(--quiet); border-style: dashed; }
 .step-row .title, .example .title { font-weight: 700; }
 .values, .date { color: var(--muted); font-size: 0.95rem; }
+.step-row.quiet .values, .step-row.quiet .date { color: var(--quiet); }
+.state-settled, .state-didntStay { color: var(--quiet); }
 .state { font-size: 0.9rem; font-weight: 600; }
 .step-row.quiet .title { font-weight: 600; }
 .example li { margin: 0.5rem 0; border-style: dashed; background: transparent; }
@@ -276,8 +290,17 @@ textarea.input { min-height: 7rem; resize: vertical; }
   display: grid;
   place-items: center;
 }
-.strip .ticked .mark { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.strip .ticked .mark::after { content: "✓"; font-weight: 700; }
+.strip .ticked .mark { background: var(--bright); border-color: var(--bright); color: var(--bright-ink); }
+/* The tick is drawn, not typed, so no phone can swap in a coloured emoji for it. */
+.strip .ticked .mark::after {
+  content: "";
+  width: 28%;
+  height: 52%;
+  margin-top: -12%;
+  border: solid var(--bright-ink);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
 .strip li:last-child .day { font-weight: 700; color: var(--text); }
 .encouragement { font-weight: 600; }
 
@@ -339,7 +362,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
   text-align: center;
   border-top: 3px solid transparent;
 }
-.tab[aria-current="page"] { color: var(--accent); border-top-color: var(--accent); }
+.tab[aria-current="page"] { color: var(--accent); border-top-color: var(--bright); }
 
 /* ---------------------------------------------------------------- dialogs and panels */
 

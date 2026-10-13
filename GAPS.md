@@ -23,7 +23,6 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 | Q44, Q133 | Whether the "plus two" stays at all | `REHEARSAL_BOOST` in `public/rules.js` | 2 |
 | Q109 | Test Export on her phone, opened from the home-screen icon | `exportData` in `public/screens/parts.js` | plain download, the share sheet on an iPhone home-screen app |
 | Q110 | Git author for this repository | `.git/config` | Fran <franhillproperty@gmail.com> |
-| Q115 | The accent colour | `--accent` in `public/styles.css`, `theme-color` in `public/index.html` | airforce blue #4F6F8F (lighter #8FB1D1 in dark mode) |
 | Q120 | An own domain: only before anyone else uses the app, since moving later strands their data | (Railway, stage 3) | the Railway address |
 
 ### Values PLAN.md marks "Fran to confirm" (Q79)
@@ -139,9 +138,10 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 - Time yourself has no instruction line; the field's question, "How fast do you read aloud?", carries it.
 - After a timed reading, Settings shows the timed words a minute under the choices, with none of slow, average or quick picked.
 - The Step screen lists every attempt, including those from before the dials last changed (history only, Q130), without marking them.
+- Colours (Q115, replaced): light mode uses deep orange #C2410C (4.9:1 on the off-white ground #FAF8F5; white text on it 5.2:1). On the near-black ground #151311, #C2410C is only 3.6:1, so dark mode uses the lighter deep orange #EA580C (5.2:1) with near-black text on it. For the same reason, the dark blue-grey for settled and didn't-stay steps is #475569 in light mode and lightened to #94A3B8 in dark mode (both over 7:1). The bright orange #F97316 is used only for shapes: the ticked days, the current step's left-edge marker, the active tab's top bar and the notices' edge. On the off-white ground it is 2.6:1, so a ticked day also shows a near-black tick. test/colours.test.js checks every pairing.
 - At the largest text sizes the bars at the top and bottom stop growing (about 22px text), so they never cover the screen; the tab bar wraps to two rows, and the 0 to 10 buttons wrap to as many rows as they need (each at least 48px).
 
 ## 4. Not built yet
 
-- Stage 3: the web app manifest and its icon, the hardened server, the Railway config.
-- Stage 4: BUGS.md and TESTING.md.
+- Stage 3: the web app manifest and its icon (the ladder in bright orange on white, Q115), the hardened server, the Railway config.
+- Stage 4: started early. BUGS.md and TESTING.md exist since bug 1; stage 4 checks them.
