@@ -7,9 +7,15 @@ import { QUIPS } from '../public/strings.js';
 
 let clock = 0;
 const at = () => new Date(Date.UTC(2026, 9, 13, 8, 0, clock++)).toISOString();
-const steps = states => states.map((state, i) => ({ id: `s${i}`, state }));
-const attempt = (stayed, hardToStay) => ({ stepId: 's0', stayed, hardToStay, createdAt: at() });
+const steps = states => states.map((state, i) => ({ id: `s${i}`, state, goal: false }));
+const attempt = (stayed, hardToStay, stepId = 's0') => ({ stepId, stayed, hardToStay, createdAt: at() });
 const data = (states, attempts = []) => ({ steps: steps(states), attempts });
+// After Set-up, with step `goalAt` marked as the goal.
+const withGoal = (states, goalAt, attempts = []) => ({
+  person: { goalSituation: 'fiveMinutes' },
+  steps: steps(states).map((s, i) => ({ ...s, goal: i === goalAt })),
+  attempts,
+});
 
 describe('Where the jelly is', () => {
   it('its rung is the settled steps out of all the steps; at the top it is at the lectern', () => {
@@ -34,13 +40,44 @@ describe('How much its legs wobble', () => {
   it('is full before any stay', () => {
     assert.equal(sceneState(data([])).wobble, 1);
   });
+
+  it('reads only attempts on this ladder\'s steps: a new ladder wobbles fully until its first stay', () => {
+    const old = attempt(true, 0, 'earlier');
+    assert.equal(sceneState(data(['rehearsing'], [old])).wobble, 1);
+    assert.equal(sceneState(data(['rehearsing'], [old, attempt(true, 6)])).wobble, 0.5);
+    assert.equal(sceneState(data(['rehearsing'], [attempt(true, 6), attempt(true, 0, 'earlier')])).wobble, 0.5);
+  });
+});
+
+describe('A complete ladder: the jelly at the lectern', () => {
+  it('is at the top once the goal step settles, even with other steps still open', () => {
+    const s = sceneState(withGoal(['settled', 'rehearsing', 'didntStay'], 0));
+    assert.equal(s.atTop, true);
+    assert.equal(s.quip, 'complete');
+  });
+
+  it('not while the goal step is still open, nor with no goal step, nor before Set-up', () => {
+    const open = sceneState(withGoal(['settled', 'rehearsing'], 1));
+    assert.deepEqual([open.atTop, open.quip], [false, 'nearly']);
+    assert.equal(sceneState(withGoal(['settled', 'rehearsing'], -1)).quip, 'nearly');
+    const noPerson = withGoal(['settled', 'rehearsing'], 0);
+    assert.equal(sceneState({ ...noPerson, person: null }).quip, 'nearly');
+  });
+
+  it('the complete quip comes before every other, the didn\'t-stay one included', () => {
+    const d = withGoal(['settled', 'didntStay'], 0, [attempt(true, 1), attempt(false, 8, 's1')]);
+    assert.equal(sceneState(d).quip, 'complete');
+    assert.equal(sceneState({ ...d, person: null }).quip, 'didntStay');
+    assert.equal(sceneState(withGoal(['settled', 'settled'], 1)).quip, 'complete');
+    assert.equal(sceneState(withGoal(['settled', 'settled'], -1)).quip, 'top');
+  });
 });
 
 describe('The quip, chosen by progress', () => {
   const quip = (states, attempts) => QUIPS[sceneState(data(states, attempts)).quip];
 
   it('every quip has its words', () => {
-    for (const key of ['none', 'firstStep', 'didntStay', 'quarter', 'halfway', 'nearly', 'top']) assert.ok(QUIPS[key], key);
+    for (const key of ['complete', 'none', 'firstStep', 'didntStay', 'quarter', 'halfway', 'nearly', 'top']) assert.ok(QUIPS[key], key);
   });
 
   it('no steps; first step planned; a quarter; halfway; one from the top; at the top', () => {
@@ -57,5 +94,10 @@ describe('The quip, chosen by progress', () => {
   it('after a didn\'t stay, until the next attempt', () => {
     assert.equal(quip(['settled', 'didntStay', 'rehearsing', 'rehearsing'], [attempt(false, 8)]), 'Came back down. The ladder\'s still here.');
     assert.equal(quip(['settled', 'ready', 'rehearsing', 'rehearsing'], [attempt(false, 8), attempt(true, 5)]), 'Wobbling, climbing, still here.');
+  });
+
+  it('a didn\'t stay on an earlier ladder\'s step doesn\'t count', () => {
+    assert.equal(sceneState(data(['rehearsing', 'rehearsing'], [attempt(false, 8, 'earlier')])).quip, 'firstStep');
+    assert.equal(sceneState(data(['rehearsing', 'rehearsing'], [attempt(false, 8)])).quip, 'didntStay');
   });
 });

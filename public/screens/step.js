@@ -2,9 +2,9 @@
 // screen with its rehearsal counter (L99-L101), Log an attempt (L102-L105) and the reply.
 
 import * as R from '../rules.js';
-import { h, textField, choices, rating, toggle, button, link, ask, tell, notice, confetti } from '../ui.js';
+import { h, textField, choices, rating, toggle, button, link, ask, tell, notice, confetti, nextId } from '../ui.js';
 import {
-  FORM, ONE_THING, EARLY_CAUTION, SMALLER, SIGNPOST, STEP, LOG, REPLIES, LADDER, COMMON,
+  FORM, ONE_THING, EARLY_CAUTION, SMALLER, SIGNPOST, STEP, LOG, REPLIES, COMPLETE, LADDER, COMMON,
   TOGGLE_LABELS, OWN_ITEM_LABEL, VISIBILITY, MATTERS, UNITS,
 } from '../strings.js';
 import { rowText, timesText, stateText, formatDate, changeText, undoText, turnDownChoice } from '../format.js';
@@ -14,7 +14,7 @@ import { signpost } from './parts.js';
 const capitalise = s => s.charAt(0).toUpperCase() + s.slice(1);
 const number = v => (String(v).trim() === '' ? null : Number(v));
 const EDITABLE = ['title', 'text', 'words', 'people', 'visibility', 'matters', 'toggles', 'ownItem', 'where', 'when',
-  'whatsDifferent', 'feelsEasy', 'distractor', 'rehearsalTarget', 'suggested'];
+  'whatsDifferent', 'feelsEasy', 'distractor', 'rehearsalTarget', 'suggested', 'goal'];
 const pick = step => Object.fromEntries(EDITABLE.map(k => [k, Array.isArray(step[k]) ? [...step[k]] : step[k]]));
 
 // What to do to make a step smaller, as nodes. An "ask" offers the dials that can go lower
@@ -192,6 +192,10 @@ export function stepFormScreen(app, { id, query }) {
     after: targetHigher ? FORM.targetHigher : null, // the line under the box (L53)
     onInput: v => { form.rehearsalTarget = number(v); changed(); },
   });
+  // The step the person is climbing towards. Saving it marked takes the mark off any other;
+  // the ladder is complete once it settles.
+  const goal = toggle({ label: FORM.goalStep, checked: !!form.goal, onChange: on => { form.goal = on; changed(); } });
+  goal.classList.add('goal-step');
   nobodyThere();
 
   const fields = { title, words, people, visibility, matters, whatsDifferent: different, feelsEasy: easy, distractor, rehearsalTarget: target };
@@ -253,7 +257,7 @@ export function stepFormScreen(app, { id, query }) {
       on.tooBig ? notice(LADDER.notices.tooBig) : null, // Q66
       on.friendsOnly ? notice(LADDER.notices.friendsOnly) : null,
       !editing && R.breathingNudge(data, today()) ? notice(FORM.breathingNudge(R.breathingCount(data.breathing, today()))) : null,
-      title, length, people, visibility, matters, checklist, where, when, different, easy, distractor, target,
+      title, length, people, visibility, matters, checklist, where, when, different, easy, distractor, target, goal,
       button(COMMON.save, save, { primary: true })),
   };
 }
@@ -272,15 +276,43 @@ function planningMessage(advice, step) {
 
 // ---------------------------------------------------------------- the Step screen
 
+const attemptsOn = (data, step) => data.attempts.filter(a => a.stepId === step.id).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+
+// The pasted text, to rehearse from the screen (Q69). It stays open across +1 presses.
+function pastedText(app, step) {
+  const open = app.flash.textOpen === step.id;
+  const textBox = h('div', { class: 'pasted', hidden: !open }, step.text);
+  const showText = step.text.trim() ? button(open ? STEP.hideText : STEP.showText, e => {
+    textBox.hidden = !textBox.hidden;
+    app.flash.textOpen = textBox.hidden ? null : step.id;
+    e.target.textContent = textBox.hidden ? STEP.showText : STEP.hideText;
+  }, { quiet: true, small: true }) : null;
+  return [showText, textBox];
+}
+
+// The attempts, newest first, with their notes. `onDelete` gives each a Delete.
+function attemptList(attempts, onDelete = null) {
+  return attempts.length ? h('ol', { class: 'attempts' }, attempts.map(a => h('li', {},
+    h('p', { class: 'attempt-head' },
+      h('span', {}, formatDate(a.date)),
+      h('span', {}, a.stayed ? STEP.stayed : STEP.didntStay),
+      h('span', {}, UNITS.outOfTen(a.hardToStay))),
+    [['wentWrong', LOG.wentWrong], ['wouldChange', LOG.wouldChange], ['feedback', LOG.feedback]]
+      .filter(([key]) => a[key]).map(([key, label]) => h('div', { class: 'note' }, h('p', { class: 'note-label' }, label), h('p', {}, a[key]))),
+    onDelete ? button(STEP.deleteAttempt, () => onDelete(a), { quiet: true, small: true }) : null))) : null;
+}
+
 export function stepScreen(app, { id }) {
   const data = app.data();
-  const step = data.steps.find(s => s.id === id);
-  if (!step) {
+  const found = R.findStep(data, id);
+  if (!found) {
     app.go('ladder', { replace: true });
     return null;
   }
+  if (found.earlier) return earlierStepScreen(app, found.step);
+  const { step } = found;
   const actions = R.allowedActions(step);
-  const attempts = data.attempts.filter(a => a.stepId === step.id).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  const attempts = attemptsOn(data, step);
   const put = next => app.save({ ...app.data(), steps: app.data().steps.map(s => (s.id === next.id ? next : s)) });
   const counterText = s => STEP.counter(R.distractorForCounter(s.distractor), s.rehearsalCount, s.rehearsalTarget);
   // Tell a screen reader the new count, and the state if it changed.
@@ -336,6 +368,12 @@ export function stepScreen(app, { id }) {
       cancel: false,
     });
     if (!yes) return;
+    // The latest data, in case another copy of the app deleted the step or moved it to a
+    // finished ladder while the question was open (Q119): then just show what's there now.
+    if (!app.data().steps.some(s => s.id === step.id)) {
+      app.render();
+      return;
+    }
     if (app.save(R.deleteStep(app.data(), step.id))) app.go('ladder', { replace: true });
   };
 
@@ -345,17 +383,15 @@ export function stepScreen(app, { id }) {
       buttons: [{ label: STEP.deleteAttempt, value: true }, { label: STEP.keep, value: false, primary: true, safe: true }],
       cancel: false,
     });
-    if (yes) app.save(R.deleteAttempt(app.data(), attempt.id));
+    if (!yes) return;
+    if (!app.data().steps.some(s => s.id === step.id)) { // as above (Q119)
+      app.render();
+      return;
+    }
+    app.save(R.deleteAttempt(app.data(), attempt.id));
   };
 
-  // The pasted text, to rehearse from the screen (Q69). It stays open across +1 presses.
-  const open = app.flash.textOpen === step.id;
-  const textBox = h('div', { class: 'pasted', hidden: !open }, step.text);
-  const showText = step.text.trim() ? button(open ? STEP.hideText : STEP.showText, e => {
-    textBox.hidden = !textBox.hidden;
-    app.flash.textOpen = textBox.hidden ? null : step.id;
-    e.target.textContent = textBox.hidden ? STEP.showText : STEP.hideText;
-  }, { quiet: true, small: true }) : null;
+  const [showText, textBox] = pastedText(app, step);
 
   const leaveTo = target => () => {
     delete app.flash.lastPress;
@@ -394,17 +430,29 @@ export function stepScreen(app, { id }) {
       h('p', { class: `state state-${step.state}` }, stateText(step.state)),
       showText, textBox,
       rehearsal,
-      attempts.length ? h('ol', { class: 'attempts' }, attempts.map(a => h('li', {},
-        h('p', { class: 'attempt-head' },
-          h('span', {}, formatDate(a.date)),
-          h('span', {}, a.stayed ? STEP.stayed : STEP.didntStay),
-          h('span', {}, UNITS.outOfTen(a.hardToStay))),
-        [['wentWrong', LOG.wentWrong], ['wouldChange', LOG.wouldChange], ['feedback', LOG.feedback]]
-          .filter(([key]) => a[key]).map(([key, label]) => h('div', { class: 'note' }, h('p', { class: 'note-label' }, label), h('p', {}, a[key]))),
-        button(STEP.deleteAttempt, () => removeAttempt(a), { quiet: true, small: true })))) : null,
+      attemptList(attempts, removeAttempt),
       h('div', { class: 'row' },
         button(STEP.edit, leaveTo(`edit/${step.id}`)),
         button(STEP.delete, removeStep, { quiet: true }))),
+  };
+}
+
+// A step on an earlier ladder is kept to look back on, not changed: what it was, how it
+// ended and its attempts, with nothing to rehearse, log, edit or delete.
+function earlierStepScreen(app, step) {
+  const data = app.data();
+  const [showText, textBox] = pastedText(app, step);
+  return {
+    tabs: 'ladder',
+    back: 'ladder',
+    node: h('div', { class: 'step' },
+      h('h1', {}, step.title),
+      h('p', { class: 'values' }, rowText(step, data.person.pace)),
+      step.when ? h('p', { class: 'date' }, formatDate(step.when)) : null,
+      h('p', { class: `state state-${step.state}` }, stateText(step.state)),
+      h('p', { class: 'from-earlier' }, STEP.fromEarlier),
+      showText, textBox,
+      attemptList(attemptsOn(data, step))),
   };
 }
 
@@ -431,6 +479,11 @@ export function logScreen(app, { id }) {
     onChange: set('stayed'),
   });
   const hard = rating({ legend: LOG.hard, ends: LOG.ends, onChange: set('hardToStay') });
+  // What the rating is of, under the question and read with it.
+  const hardHintId = nextId('hard-hint');
+  hard.querySelector('legend').after(h('p', { class: 'hint', id: hardHintId }, LOG.hardHint));
+  hard.dataset.describe = hardHintId; // kept when an error is shown or cleared
+  hard.setAttribute('aria-describedby', hardHintId);
   const wentWrong = textField({ label: LOG.wentWrong, multiline: true, onInput: set('wentWrong') });
   const wouldChange = textField({ label: LOG.wouldChange, multiline: true, onInput: set('wouldChange') });
   const feedback = textField({ label: LOG.feedback, multiline: true, onInput: set('feedback') });
@@ -465,6 +518,7 @@ export function logScreen(app, { id }) {
     app.flash.reply = {
       reply: result.reply, advice: result.advice, step: result.data.steps.find(s => s.id === step.id),
       settled: stateBefore !== 'settled' && stateAfter === 'settled', // this attempt settled the step
+      completed: result.completed, // and it was the goal step: the ladder is complete
     };
     app.go('reply', { replace: true });
   };
@@ -481,6 +535,7 @@ export function logScreen(app, { id }) {
 }
 
 // The reply, on its own screen with one button, OK, back to the Ladder (L105, Q46, Q92).
+// After the attempt that completes the ladder, the completion message goes under it, once.
 export function replyScreen(app) {
   const r = app.flash.reply;
   if (!r) {
@@ -495,6 +550,7 @@ export function replyScreen(app) {
     node: h('div', { class: 'reply' },
       h('p', { class: 'lead', tabindex: '-1' }, REPLIES[r.reply]),
       r.advice ? adviceNodes(r.advice, r.step, { nextTime: true }) : null,
+      r.completed ? h('p', { class: 'completion' }, COMPLETE.message) : null,
       button(COMMON.ok, done, { primary: true })),
     // A step that has just settled gets a moment of confetti (the look stage), once.
     after: () => {

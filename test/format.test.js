@@ -35,6 +35,20 @@ describe('Every value the rules produce has its words', () => {
   it('the timing passage is the one in Q77, 99 words', () => {
     assert.equal(R.countWords(S.TIMING.passage), 99);
   });
+
+  it('the ladder-complete state and finished ladders use Fran\'s words (14 Oct 2026)', () => {
+    assert.equal(S.COMPLETE.message, 'You\'ve reached what you set out to do. From here, nerves before a speech aren\'t a sign the step\'s too big; they\'re what speaking feels like. Keep logging if you like, but you\'re not climbing any more.');
+    assert.equal(S.QUIPS.complete, 'Jelly legs are optional now.');
+    assert.equal(S.LADDER.setNewGoal, 'Set a new goal');
+    assert.equal(S.LADDER.earlier, 'Ladders you\'ve finished');
+    assert.equal(S.LOG.hardHint, 'Rate how hard it was to stay to the end, not how nervous you were. Nerves beforehand are normal and don\'t count.');
+    assert.equal(S.FORM.goalStep, 'My goal');
+    assert.equal(S.STEP.fromEarlier, 'From a ladder you finished');
+    // A typed goal is rated with answer 88's question, the one Set-up asks.
+    assert.equal(S.SETUP.situationsLabel, 'How frightening does each of these feel right now?');
+    // The complete quip is checked first, so it comes first in the list of quips.
+    assert.equal(Object.keys(S.QUIPS)[0], 'complete');
+  });
 });
 
 describe('Dates, rows and states (Q90)', () => {
@@ -84,8 +98,15 @@ describe('The progress line (L43, Q55)', () => {
     assert.equal(F.progressText(person(8, 8, 7)), 'Your goal felt like an 8 when you started. One week on, it\'s an 8.');
   });
 
+  it('rated again within the week, or on an earlier day: only the start, never "Zero weeks"', () => {
+    assert.equal(F.progressText(person(8, 3, 6)), 'Your goal felt like an 8 when you started.');
+    assert.equal(F.progressText(person(8, 3, 0)), 'Your goal felt like an 8 when you started.');
+    assert.equal(F.progressText(person(8, 3, -1)), 'Your goal felt like an 8 when you started.');
+  });
+
   it('numbers in words, British style', () => {
     assert.deepEqual([4, 21, 40, 104, 120].map(F.numberWords), ['four', 'twenty-one', 'forty', 'one hundred and four', 'one hundred and twenty']);
+    assert.deepEqual([-1, 2.5].map(F.numberWords), ['-1', '2.5'], 'never undefined, so the Ladder can always draw');
   });
 });
 

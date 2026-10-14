@@ -1,10 +1,12 @@
-// Settings (L107, Q50-Q52): venue, town, pace and goal, each saved as soon as it changes;
-// the welcome; export, import and delete everything. Nothing else.
+// Settings (L107, Q50-Q52, Q52 replaced): pace and a picked goal save as soon as they
+// change; the venue, the town and a goal typed in the person's own words (rated first) each
+// have a Save; the welcome; export, import and delete everything. Nothing else.
 
 import * as R from '../rules.js';
-import { h, textField, choices, button, ask } from '../ui.js';
+import { h, textField, button, ask } from '../ui.js';
 import { SETTINGS, SETUP, COMMON } from '../strings.js';
-import { venueField, paceField, exportData, importData } from './parts.js';
+import { now, today } from '../store.js';
+import { venueField, paceField, goalPicker, exportData, importData } from './parts.js';
 
 export function settingsScreen(app) {
   const person = app.data().person;
@@ -27,10 +29,11 @@ export function settingsScreen(app) {
   const boxes = { venue, town };
   const saves = { venue: saveVenue, town: saveTown };
 
+  let goal = null;
   const refresh = () => {
     const stored = app.data().person;
     for (const key of ['venue', 'town']) saves[key].disabled = boxes[key].input.value.trim() === stored[key];
-    app.setDirty(!saveVenue.disabled || !saveTown.disabled);
+    app.setDirty(!saveVenue.disabled || !saveTown.disabled || !!goal?.text());
   };
   const saveText = key => {
     const value = boxes[key].input.value.trim();
@@ -51,12 +54,35 @@ export function settingsScreen(app) {
     });
   }
   const pace = paceField({ pace: person.pace, onChange: p => update({ pace: p }) });
-  const goal = choices({
-    legend: SETUP.goalLabel, columns: 1,
-    options: person.situations.map(s => ({ value: s.id, label: s.text })),
-    value: person.goalSituation,
-    onChange: id => app.save({ ...app.data(), person: R.setGoal(app.data().person, id) }, { redraw: false }),
-  });
+
+  // The goal (Q52, replaced 14 Oct 2026): picking a situation saves at once; a goal typed in
+  // the person's own words is rated and saved with its own Save, then joins the list,
+  // picked. Typed but not saved counts as unsaved input, like the venue. Changing the goal
+  // here never starts a new ladder; only Set a new goal on the Ladder does.
+  const saveGoal = () => {
+    const result = R.addOwnGoal(app.data().person, goal.text(), goal.rating(), { now: now(), today: today() });
+    if (!result.ok) {
+      goal.showErrors(result.errors)?.scrollIntoView({ block: 'center' });
+      return;
+    }
+    if (!app.save({ ...app.data(), person: result.person }, { redraw: false })) return;
+    // Only the goal control is drawn again, so anything typed in the other boxes stays.
+    drawGoal();
+    refresh();
+    goal.group.querySelector('input:checked')?.focus();
+  };
+  const drawGoal = () => {
+    const stored = app.data().person;
+    const next = goalPicker({
+      situations: stored.situations, value: stored.goalSituation, legend: SETUP.goalLabel,
+      onPick: id => app.save({ ...app.data(), person: R.setGoal(app.data().person, id) }, { redraw: false }),
+      onType: () => refresh(),
+    });
+    next.extra.append(button(COMMON.save, saveGoal, { small: true, primary: true }));
+    goal?.replaceWith(next);
+    goal = next;
+  };
+  drawGoal();
 
   const deleteEverything = async () => {
     const first = await ask({

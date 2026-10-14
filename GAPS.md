@@ -55,6 +55,11 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
   | The same room, and this time you can see them | 200 | 500 | clearly | somewhat | can see them |
   | A full page in that room | 400 | 500 | clearly | somewhat | length |
 
+- **Ladder complete** (`COMPLETE.message`), Fran's words from her spec (Q138), a Content draft for her to edit. Under the reply after the attempt that settles the goal step, once (Q141): "You've reached what you set out to do. From here, nerves before a speech aren't a sign the step's too big; they're what speaking feels like. Keep logging if you like, but you're not climbing any more."
+- **The hint on Log an attempt** (`LOG.hardHint`), Fran's words (Q142). Under "How hard was it to stay?", before the 0 to 10 buttons: "Rate how hard it was to stay to the end, not how nervous you were. Nerves beforehand are normal and don't count."
+- **Set a new goal** (`LADDER.setNewGoal`), Fran's words (Q138). The button in place of Suggest a step while the ladder is complete.
+- **The goal step and finished ladders**, Fran's words (Q143): the switch on Add a step and Edit is "My goal" (`FORM.goalStep`); the heading at the foot of the Ladder is "Ladders you've finished" (`LADDER.earlier`); the line on a step from one of them is "From a ladder you finished" (`STEP.fromEarlier`). A goal typed in Settings or Set a new goal is rated under Set-up's question, "How frightening does each of these feel right now?" (`SETUP.situationsLabel`, Q88).
+
 ### Wording written in the answers, listed for Fran to put in her own voice
 
 | Q | Key | Words |
@@ -129,15 +134,16 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 
 ### The quips under the scene (the look stage), for Fran to rewrite
 
-All seven, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order is the builder's call):
+All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order is the builder's call, except the first: Fran's spec shows it whenever the ladder is complete):
 
-1. No steps yet: "Jelly legs, at the bottom, looking up."
-2. Every step settled: "On the stage, legs like concrete."
-3. The most recently logged attempt was a didn't stay: "Came back down. The ladder's still here." It stays until the next attempt is logged.
-4. All but one step settled (with at least two steps): "Nearly there. The lectern's looking smaller."
-5. Half or more settled: "Halfway up and the knees have mostly stopped knocking."
-6. A quarter or more settled: "Wobbling, climbing, still here."
-7. Otherwise, steps on the ladder but under a quarter settled: "One foot on the ladder. That counts."
+1. The ladder is complete, its goal step settled (Q138): "Jelly legs are optional now." Fran's words.
+2. No steps yet: "Jelly legs, at the bottom, looking up."
+3. Every step settled: "On the stage, legs like concrete."
+4. The most recently logged attempt on this ladder was a didn't stay: "Came back down. The ladder's still here." It stays until the next attempt is logged.
+5. All but one step settled (with at least two steps): "Nearly there. The lectern's looking smaller."
+6. Half or more settled: "Halfway up and the knees have mostly stopped knocking."
+7. A quarter or more settled: "Wobbling, climbing, still here."
+8. Otherwise, steps on the ladder but under a quarter settled: "One foot on the ladder. That counts."
 
 ## 3. Builder's calls, not in PLAN.md or the answers
 
@@ -149,9 +155,10 @@ All seven, in `QUIPS` in strings.js. The first that applies is shown, checked in
 - When the check-in is due, its rating rows sit under the progress line (L89, Q54) and push the step being worked on below the first screenful until the check-in is saved (L91 asks for it to be visible without scrolling).
 - Time yourself has no instruction line; the field's question, "How fast do you read aloud?", carries it.
 - After a timed reading, Settings shows the timed words a minute under the choices, with none of slow, average or quick picked.
-- In Settings, the venue and the town each have a Save button (BUGS.md 2). Pace and goal save the moment they are chosen, since the choice shows on screen.
+- In Settings, the venue and the town each have a Save button (BUGS.md 2). Pace and a picked goal save the moment they are chosen, since the choice shows on screen; a goal typed in the person's own words has its own Save (see "Ladder complete and new goals").
 - The Step screen lists every attempt, including those from before the dials last changed (history only, Q130), without marking them.
-- Colours (Q115): one orange, #F97316, the same in light and dark mode. On screen it reads as orange rather than red, so the warmer #FB8C1A wasn't needed. Text and marks on it are #1A1A1A (6.2:1). No text is orange: links and link-like controls (Back, Mark ready now, the outside links) keep the text colour with a 3px orange underline. The orange fills filled buttons, chosen options and ticked days; it is the current step's left edge, the active tab's top bar, and the edge of notices, the signposts, the check-in and the club line. Buttons that aren't filled have a grey edge (3:1 or more) and text in the text colour. The rehearsal box and notices sit on white (near-black in dark mode), not an orange tint. The orange against the off-white ground is 2.6:1, so nothing relies on it alone: words always carry their own contrast. The focus outline is in the text colour. The dark blue-grey for settled and didn't-stay steps is #475569 in light mode and lightened to #94A3B8 in dark mode (both over 7:1). test/colours.test.js checks every pairing, and that no rule colours text orange.
+- Colours (Q115, Q137): the ground is off-white #FBF7F2 in light mode and near-black #141210 in dark. One orange, #F97316, the same in both modes. On screen it reads as orange rather than red, so the warmer #FB8C1A wasn't needed. Text and marks on it are #1A1A1A (6.2:1). No text is orange: links and link-like controls (Back, Mark ready now, the outside links) keep the text colour with a 3px orange underline. The orange fills filled buttons, chosen options and ticked days; it is the current step's left edge, the active tab's top bar, and the edge of notices, the signposts, the check-in, the club line and the ladder-complete message. Buttons that aren't filled have a grey edge (3:1 or more) and text in the text colour. The orange against the off-white ground is 2.6:1, so nothing relies on it alone: words always carry their own contrast. The focus outline is in the text colour. Settled and didn't-stay text, and the dashed edge of those rows, are the blue-grey #4F6F8F in light mode (4.9:1 on the ground, 5.3:1 on white) and #8AA4BF in dark mode (7.3:1 on the ground, 6.6:1 on a card). The decorative blue-grey (the confetti, the scene) stays #4F6F8F in both modes. Cards (step rows, notices, signposts, the check-in, the suggestion card, the rehearsal box, the pasted text, the timing passage, the learning line, the ladder-complete message, dialogs) are white, not an orange tint, or a dark grey in dark mode, with a 14px radius, a soft 1px warm-grey border and, in light mode only, a faint shadow. Settled and didn't-stay rows are see-through, with the dashed blue-grey edge, and the example ladder's rows keep their dashed grey edge. Controls (buttons, text boxes, choices) keep their own 12px corners and their 3:1 edges. test/colours.test.js checks every pairing in both modes, the grounds, the blue-greys and the card radius, and that no rule colours text orange.
+- Fonts (Q136): Fraunces for headings, the goal line on the Ladder and the earlier ladders' goals; Source Sans 3 for everything else, controls included, with its own italic for the quip. Both are variable fonts, so one file holds every weight. They are in public/fonts with their licences (the SIL Open Font License) and served by the app itself, so no font comes from another address; the upright Source Sans 3 and Fraunces are preloaded, and the page shows in the phone's own fonts until they arrive. Fallbacks: Georgia for headings, the system fonts for the rest. The phone's text-size setting still sets the size. test/look.test.js checks that every font the stylesheet names is a real WOFF2 file in public/fonts, that each font folder has its licence, that nothing loads from another address, and that the server sends the fonts as fonts.
 - At the largest text sizes the bars at the top and bottom stop growing (about 22px text), so they never cover the screen; the tab bar wraps to two rows, and the 0 to 10 buttons wrap to as many rows as they need (each at least 48px).
 
 ### The look stage
@@ -165,9 +172,48 @@ All seven, in `QUIPS` in strings.js. The first that applies is shown, checked in
 - The Breathe circle sits under the exercise text and above the seven days. It swells over about two seconds (the breath in), pauses briefly, swells to full over about a second (the sip), then sinks over about six seconds: nine seconds a round. Start and Stop are the words from L80's rehearsal timer; the button reads Start until pressed. Once started it stays on if the person goes to another screen and comes back (starting again from the breath in), and is off again when the app is next opened. With less motion asked for, the circle sits still at its smallest and there is no button.
 - Confetti: 48 pieces, alternately the orange and the blue-grey, burst from the middle of the screen for one second, once, on the reply that follows the attempt where a step settles. None when less motion is asked for.
 
+### Ladder complete and new goals
+
+Fran's spec and answers are Q138 to Q143, and Q52 replaced. Everything below is the builder's call. Fran confirmed the six she was shown on 14 Oct 2026 (Q144): completion worked out fresh each time; a new ladder starting afresh; the plus two carrying across; a typed goal rated that day, without moving the check-in clock, and that rating its baseline; the labels (since worded, Q143); and version 2 of the stored data, with version 1 upgraded.
+
+The data
+- The stored data is now version 2. A file or a phone holding version 1 is still read: every step comes in unmarked and there are no earlier ladders, and the next save writes version 2. An older copy of the app can't read a version 2 file.
+- Import checks the new parts too: at most one marked step on each ladder, step ids unique across every ladder, and each earlier ladder's goal one of the listed situations. An attempt may belong to a step on any ladder.
+
+A goal in the person's own words (Q52 replaced)
+- It is rated on its own, in a dated set of its own marked as added. An added set doesn't move the check-in clock: the 28 days still count from Set-up or the last check-in. The next check-in rates it with everything else.
+- A goal's first rating is its baseline. For a goal typed in Settings or Set a new goal, "when you started" on the progress line means when it was typed, and the weeks count from then to the latest check-in. Until it is rated again at least a whole week after it was typed, the line has only the first half. Added ratings don't move the check-in clock, so a goal typed in the week before a check-in is rated twice within the week; that check-in's rating isn't shown, and the second half of the line comes with the next check-in, never as "Zero weeks on". The same if the phone's date goes back between the two. A goal chosen at Set-up works exactly as before.
+- Picking a listed situation as the goal, in Settings or Set a new goal, keeps that situation's own first rating as the baseline, usually Set-up's.
+- Typed words that match a listed situation, ignoring capitals and spaces at the ends, pick that situation: no rating is needed, any rating given is ignored, and nothing is added.
+- No 9-or-10 clarifying question for a typed goal; that stays at Set-up (Q53).
+- In Settings, typing shows the rating and a small Save under the box; Enter in the box moves to the rating rather than saving. Picking a situation still saves at once and empties the box. The saved pick stays showing while the person types, since it is already saved. Typed words not yet saved count as unsaved input, so leaving Settings asks first, like the venue. After Save only the goal control is drawn again, so anything typed but not saved in the venue or town box stays, and the new goal shows in the list, picked.
+- Settings never starts a new ladder. Changing the goal there leaves the steps where they are; only Set a new goal moves them.
+
+The goal step and the complete ladder
+- Saving a step with the switch on takes the mark off any other step. Marking or unmarking isn't a change to the step's size, so the step keeps its state and its run-throughs.
+- Nothing on the Ladder or the Step screen shows which step is marked; its switch on Edit does.
+- Completion is worked out fresh each time, like the notices (Q27). Deleting the attempt that settled the goal step, editing its dials (it goes back to rehearsing or planning), switching the mark off, or moving the mark to a step that isn't settled all undo it: Suggest a step and the notices come back. Settling the goal step again shows the message again.
+- Marking a step that is already settled completes the ladder straight away, with no message: the message only follows an attempt that settles the goal step.
+- While the ladder is complete, Add a step still adds to the same ladder, and it stays complete unless the new step is saved with "My goal" on: that moves the mark to a step that isn't settled yet, so the ladder is no longer complete (see above). Logging goes on as normal; a later attempt on the goal step gets the usual reply and no message.
+- With the friends line off, a no to a stranger step gets the make-it-smaller message, never the keep-going one (Q31). The find-somewhere line, the early-steps caution, make-it-smaller, the replies, the rehearsal counter and the plus two are unchanged.
+- For the one-thing check, "while complete" means as the ladder stands before the save. So editing the goal step's dials on a complete ladder isn't checked, even though that save undoes the completion.
+- The message sits under the reply and any smaller-step line, above OK. The confetti fires because the step has settled.
+- The hint on Log an attempt sits between "How hard was it to stay?" and the 0 to 10 buttons, and a screen reader reads it with the question, also when the "Needed" error shows. The end labels (Q94) are unchanged.
+- The scene: while the ladder is complete the jelly stands at the lectern, even if other steps aren't settled, and the complete quip comes before every other.
+
+Set a new goal and the earlier ladders
+- Set a new goal opens a full-screen panel, like Suggest: Set-up's goal question as its heading, every situation in one column with none picked, then "Or type your own" with its rating under it once the box has text, and one Save. Set-up's hint, "Pick one of the situations above, or type your own.", isn't shown, since it points "above".
+- Typing un-picks the situation; picking a situation empties the box. The rating belongs to the typed words: when the box empties, the rating hides and its answer is cleared. Enter in the box moves to the rating.
+- The same goal can be picked again.
+- No "are you sure?" before a new ladder starts: Save starts it. Back with typed words asks first (Q63); a picked situation alone doesn't.
+- After Save the Ladder goes back to the top and the new goal line takes focus, so a screen reader reads the new goal and the jelly can be seen coming down. If the ladder stopped being complete while the panel was open (the app open twice, Q119), Save just closes the panel and shows the Ladder as it now is.
+- On the new ladder everything starts afresh: Suggest offers the floor, the early-steps caution counts from nothing, there is no one-thing base, and the too-big notice and the friends line read only the new steps. The old ladder's attempts stay with their steps but count towards none of these.
+- Two things carry across: the plus two, because it is about the person's rehearsal habit (Q133), and the breathing nudge, which shows only before the person's first step on any ladder. The distractor doesn't: the first blank Add a step on a new ladder starts with it empty.
+- The wobble and the didn't-stay quip read only the current ladder's attempts, so a new ladder's jelly wobbles fully until its first stay there.
+- Earlier ladders sit at the foot of the Ladder, under "Ladders you've finished", newest ladder first. Each has its goal as a heading (no end date), then its steps, newest first, in the quiet look whatever their state.
+- A step from an earlier ladder opens read-only: title, values, date, state, "From a ladder you finished", Show the text if it has text, and its attempts with their notes but no Delete. No rehearsal counter, Log an attempt, Edit or Delete. Back goes to the Ladder.
+
 ## 4. Not built yet
 
-- The look stage, second half: the bundled fonts (Fraunces for headings, Source Sans 3 for the body) and the palette everywhere (#FBF7F2 and #141210 grounds, 14px cards with a soft border, #4F6F8F for the quieter states). Waiting on Fran's go-ahead after seeing the scene and the circle.
-
-- Stage 3: the web app manifest and its icon (the ladder in bright orange on white, Q115), the hardened server, the Railway config.
+- Stage 3: the web app manifest and its icon (the ladder in bright orange on white, Q115), the hardened server, the Railway config. The server sends every file with no-cache and nothing to check it against, so the fonts (about 350 KB) download again on each visit; the hardened server should let the phone keep them.
 - Stage 4: started early. BUGS.md and TESTING.md exist since bug 1; stage 4 checks them.

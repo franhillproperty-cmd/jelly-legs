@@ -8,7 +8,9 @@
 // Where they disagree, the answer wins.
 
 export const APP_ID = 'jelly-legs';
-export const SCHEMA_VERSION = 1;
+// Version 2 added the goal step, earlier ladders and added rating sets. Version 1 is still
+// read, and upgraded (upgradeFrom1).
+export const SCHEMA_VERSION = 2;
 
 // The method's numbers. Fran can change any of these.
 export const EASY_LINE = 2;                 // a stay rated at or below this settles the step (L31)
@@ -354,9 +356,11 @@ export function settledOnEasyFirstStay(step, attempts) {
 }
 
 // Friends only (L41, Q8, Q29, Q30): worked out fresh from the last settled steps, in the
-// order they settled. Steps with nobody there neither count nor clear it.
+// order they settled. Steps with nobody there neither count nor clear it. Off while the
+// ladder is complete.
 export function friendsLine(data) {
   const rope = ropeLength(data.person);
+  if (ladderComplete(data)) return { on: false, rope };
   const recent = settledSteps(data.steps).filter(s => s.people > 0).slice(-rope);
   const on = recent.length === rope
     && recent.every(s => hasToggle(s, 'knowEveryone') && settledOnEasyFirstStay(s, data.attempts));
@@ -364,14 +368,31 @@ export function friendsLine(data) {
 }
 
 // All Ladder notices, in the order they stack (L90). Worked out fresh every time (Q27).
+// While the ladder is complete, nerves before a speech aren't a sign the step's too big,
+// so the too-big notice is off; the find-somewhere line stays.
 export function notices(data) {
-  const tooBig = tooBigNotice(data.steps, data.attempts);
+  const complete = ladderComplete(data);
+  const tooBig = complete ? { on: false, attempt: null } : tooBigNotice(data.steps, data.attempts);
   return {
     tooBig: tooBig.on,
     tooBigAttempt: tooBig.attempt,
     findSomewhere: findSomewhereLine(data),
     friendsOnly: friendsLine(data).on,
   };
+}
+
+// ---------------------------------------------------------------- the goal step
+
+// The step the person marked "this is my goal": at most one on a ladder.
+export function goalStep(steps) {
+  return steps.find(s => s.goal) ?? null;
+}
+
+// The ladder is complete when its goal step is settled. Worked out fresh every time, never
+// stored, so deleting the attempt that settled it, changing its dials or taking the mark
+// off undoes it.
+export function ladderComplete(data) {
+  return !!data.person && goalStep(data.steps)?.state === 'settled';
 }
 
 // ---------------------------------------------------------------- early steps
@@ -469,7 +490,8 @@ export function distractorForCounter(distractor) {
 // ---------------------------------------------------------------- adding and editing steps
 
 // A blank Add a step (Q16): dials empty; toggles and own item as on the last settled
-// step; distractor as on the most recent step; Where is the venue; target as Q44.
+// step; distractor as on the most recent step; Where is the venue; target as Q44; not
+// marked as the goal.
 export function blankDraft(data) {
   const base = lastSettledStep(data.steps);
   const recent = last(sortedByLogged(data.steps));
@@ -480,6 +502,7 @@ export function blankDraft(data) {
       toggles: base ? [...base.toggles] : [], ownItem: base ? base.ownItem : '',
       where: data.person?.venue ?? '', when: null, whatsDifferent: '', feelsEasy: null,
       distractor: recent ? recent.distractor : '', rehearsalTarget: start.target, suggested: false,
+      goal: false,
     },
     targetHigher: start.higher,
   };
@@ -503,6 +526,7 @@ function cleanDraft(d) {
     suggested: !!d.suggested,
     distractor: str(d.distractor).trim(),
     rehearsalTarget: d.rehearsalTarget,
+    goal: !!d.goal,
   };
 }
 
@@ -528,7 +552,7 @@ export function validateStep(step) {
 }
 
 // Has a dial, a toggle or the own item changed? If so an edit clears the silly-easy
-// answer (Q14) and resets the step (Q15).
+// answer (Q14) and resets the step (Q15). Marking or unmarking the goal step isn't one.
 export function sizingChanged(before, after) {
   const a = new Set(activeToggles(before));
   const b = new Set(activeToggles(after));
@@ -540,7 +564,8 @@ export function sizingChanged(before, after) {
 
 // What the person sees after a "no" to the silly-easy question (L35, L98, Q31, Q35):
 // the floor signpost; the keep-going message for a stranger step while the friends line
-// is on; otherwise the make-it-smaller message with one dial down.
+// is on (never while the ladder is complete); otherwise the make-it-smaller message with
+// one dial down.
 export function planningAdvice(data, step) {
   if (isFloor(step)) return { kind: 'floor' };
   if (isStrangerStep(step) && friendsLine(data).on) return { kind: 'keepGoing' };
@@ -549,7 +574,8 @@ export function planningAdvice(data, step) {
 
 // Everything that happens on Save, worked out but not yet stored (L98). The screen shows
 // the one-thing dialog, then the early-steps caution, then the planning advice, and calls
-// commitStep if the person goes ahead.
+// commitStep if the person goes ahead. While the ladder is complete, as it stands before
+// this save, there is no one-thing check.
 export function prepareStep(data, draft, { editingId = null, now }) {
   const existing = editingId ? data.steps.find(s => s.id === editingId) : null;
   if (editingId && !existing) throw new Error(`No step ${editingId}`);
@@ -582,21 +608,24 @@ export function prepareStep(data, draft, { editingId = null, now }) {
   if (saved.state === 'rehearsing' && saved.rehearsalCount >= saved.rehearsalTarget) saved.state = 'ready';
 
   const stepsAfter = existing ? data.steps.map(s => (s.id === saved.id ? saved : s)) : [...data.steps, saved];
+  const checked = resized && !ladderComplete(data);
   return {
     ok: true,
     step: saved,
-    oneThing: resized ? oneThingCheck(data.steps, saved, saved.id) : { base: null, changes: [], warn: false },
+    oneThing: checked ? oneThingCheck(data.steps, saved, saved.id) : { base: null, changes: [], warn: false },
     earlyCaution: earlyCaution(stepsAfter, saved),
     advice: resized && saved.state === 'planning' ? planningAdvice(data, saved) : null,
   };
 }
 
+// Only one step is the goal: saving a step marked as the goal takes the mark off any other.
 export function commitStep(data, prepared) {
   const { step } = prepared;
   const exists = data.steps.some(s => s.id === step.id);
+  const steps = exists ? data.steps.map(s => (s.id === step.id ? step : s)) : [...data.steps, step];
   return {
     ...data,
-    steps: exists ? data.steps.map(s => (s.id === step.id ? step : s)) : [...data.steps, step],
+    steps: step.goal ? steps.map(s => (s.id !== step.id && s.goal ? { ...s, goal: false } : s)) : steps,
     // The plus two is used once, by the next new step (Q44): every "no, I needed more"
     // logged before this step is spent, so deleting an attempt can't hand it out again.
     attempts: exists
@@ -605,8 +634,11 @@ export function commitStep(data, prepared) {
   };
 }
 
-// Delete a step and its attempts, nothing else (L101).
+// Delete a step and its attempts, nothing else (L101). Only a step on the current ladder:
+// a finished ladder's steps are kept to look back on, so for one of those (moved there by
+// another copy of the app while a delete was being confirmed, Q119) nothing changes.
 export function deleteStep(data, stepId) {
+  if (!data.steps.some(s => s.id === stepId)) return data;
   return {
     ...data,
     steps: data.steps.filter(s => s.id !== stepId),
@@ -626,7 +658,7 @@ function suggestionFrom(base, data) {
     visibility: base.visibility, matters: base.matters,
     toggles: [...base.toggles], ownItem: base.ownItem, where: base.where, when: null,
     whatsDifferent: '', feelsEasy: null, suggested: true,
-    distractor: base.distractor, rehearsalTarget: startingTarget(data.attempts).target,
+    distractor: base.distractor, rehearsalTarget: startingTarget(data.attempts).target, goal: false,
   };
 }
 
@@ -637,7 +669,7 @@ export function floorSuggestion(data) {
     title: '', text: '', words: 10, people: 0, visibility: 'notAtAll', matters: 'notMuch',
     toggles: [], ownItem: '', where: FLOOR_WHERE, when: null, whatsDifferent: '',
     feelsEasy: null, suggested: true, distractor: recent ? recent.distractor : '',
-    rehearsalTarget: startingTarget(data.attempts).target,
+    rehearsalTarget: startingTarget(data.attempts).target, goal: false,
   };
 }
 
@@ -733,6 +765,8 @@ function afterAttempt(current, attempt) {
 // - hardAgain: reply three; any hard stay after that
 // - easy:      reply four
 // After a didn't stay or a repeated hard stay, `advice` is the smaller step (Q46).
+// `completed` is true only for the attempt that settles the goal step, so the message
+// under the reply shows that one time.
 export function logAttempt(data, stepId, input, { now, today }) {
   const step = data.steps.find(s => s.id === stepId);
   if (!step) throw new Error(`No step ${stepId}`);
@@ -764,7 +798,8 @@ export function logAttempt(data, stepId, input, { now, today }) {
     attempts: [...data.attempts, attempt],
   };
   const advice = reply === 'didntStay' || reply === 'hardAgain' ? turnDownAdvice(next.steps, saved) : null;
-  return { ok: true, data: next, attempt, reply, advice };
+  const completed = !ladderComplete(data) && ladderComplete(next);
+  return { ok: true, data: next, attempt, reply, advice, completed };
 }
 
 // Delete an attempt (Q24) and work the step out again from what's left (Q125): replay the
@@ -774,9 +809,9 @@ export function logAttempt(data, stepId, input, { now, today }) {
 // Notices follow, being worked out fresh.
 export function deleteAttempt(data, attemptId) {
   const deleted = data.attempts.find(a => a.id === attemptId);
-  if (!deleted) return data;
+  const step = deleted ? data.steps.find(s => s.id === deleted.stepId) : null;
+  if (!step) return data; // gone, or on a finished ladder, which is kept as it was
   const attempts = data.attempts.filter(a => a.id !== attemptId);
-  const step = data.steps.find(s => s.id === deleted.stepId);
   if (!counts(step, deleted)) return { ...data, attempts };
 
   const history = currentAttempts(step, data.attempts);
@@ -805,6 +840,17 @@ export function ladderOrder(steps) {
   const newest = sortedByLogged(steps).reverse();
   const current = newest.find(s => OPEN_STATES.includes(s.state)) ?? null;
   return { current, others: newest.filter(s => s !== current) };
+}
+
+// A step on the ladder now, or on an earlier one (which the Step screen shows read-only).
+export function findStep(data, id) {
+  const step = data.steps.find(s => s.id === id);
+  if (step) return { step, earlier: false };
+  for (const ladder of data.earlierLadders) {
+    const old = ladder.steps.find(s => s.id === id);
+    if (old) return { step: old, earlier: true, goalSituation: ladder.goalSituation };
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------- set-up, goal and check-in
@@ -869,15 +915,42 @@ export function createPerson(draft, { now, today }) {
   };
 }
 
-// In Settings the goal can only be one of the situations already rated (Q52).
+// Picking one of the situations already rated as the goal. Q52's answer was replaced on
+// 14 Oct 2026: Settings may now also take a goal typed in the person's own words (addOwnGoal).
 export function setGoal(person, situationId) {
   if (!person.situations.some(s => s.id === situationId)) throw new Error(`No situation ${situationId}`);
   return { ...person, goalSituation: situationId };
 }
 
-// Due once 28 or more calendar days have passed since the latest set (Q54).
+// A goal typed in the person's own words, in Settings or in Set a new goal (Q52 replaced).
+// Text that matches a situation already listed, ignoring capitals and end spaces, picks that
+// one and needs no rating. Otherwise it joins the situations, rated 0-10 in an added set of
+// its own. No clarifying question: that is Set-up only (Q53).
+export function addOwnGoal(person, text, rating, { now, today }) {
+  const typed = str(text).trim();
+  const match = typed ? person.situations.find(s => norm(s.text) === norm(typed)) : null;
+  if (match) return { ok: true, person: setGoal(person, match.id), situationId: match.id };
+  const errors = {};
+  if (!typed) errors.text = { kind: 'required' };
+  if (!isInt(rating, 0, 10)) errors.rating = { kind: 'required' };
+  if (Object.keys(errors).length) return { ok: false, errors };
+  const id = `own-${makeId()}`;
+  return {
+    ok: true,
+    person: {
+      ...person,
+      goalSituation: id,
+      situations: [...person.situations, { id, text: typed, own: true }],
+      ratingSets: [...person.ratingSets, { date: today, at: now, ratings: { [id]: rating }, added: true }],
+    },
+    situationId: id,
+  };
+}
+
+// Due once 28 or more calendar days have passed since the latest Set-up or check-in set
+// (Q54). A goal's added set doesn't move the clock.
 export function checkInDue(person, today) {
-  return daysBetween(last(person.ratingSets).date, today) >= CHECKIN_DAYS;
+  return daysBetween(last(person.ratingSets.filter(set => !set.added)).date, today) >= CHECKIN_DAYS;
 }
 
 // Saving a check-in adds a dated set; every situation must be rated (Q54).
@@ -887,18 +960,49 @@ export function addCheckIn(person, ratings, { now, today }) {
   return { ok: true, person: { ...person, ratingSets: [...person.ratingSets, set] } };
 }
 
-// The progress line (L43, Q55): the goal's rating at Set-up, and at the latest check-in
-// with the whole weeks between, rounded down. No check-in yet: no latest.
+// The progress line (L43, Q55): the goal's first rating is the baseline (Q52), at Set-up
+// for a goal chosen there; then its latest rating, with the whole weeks between, rounded
+// down. Rated only once so far, or rated again less than a whole week after the first (a
+// goal typed just before a check-in, since added ratings don't move the check-in clock,
+// Q144; or a phone whose date went back): no latest, so the line never says "Zero weeks".
 export function progress(person) {
-  const sets = person.ratingSets;
   const goal = person.goalSituation;
-  const baseline = sets[0].ratings[goal];
-  if (sets.length < 2) return { baseline, latest: null, weeks: null };
-  const latestSet = last(sets);
+  const rated = person.ratingSets.filter(set => Object.hasOwn(set.ratings, goal));
+  const firstSet = rated[0];
+  const latestSet = last(rated);
+  const baseline = firstSet.ratings[goal];
+  const weeks = Math.floor(daysBetween(firstSet.date, latestSet.date) / 7);
+  if (latestSet === firstSet || weeks < 1) return { baseline, latest: null, weeks: null };
+  return { baseline, latest: latestSet.ratings[goal], weeks };
+}
+
+// ---------------------------------------------------------------- a new ladder
+
+// Set a new goal, once the ladder is complete. `choice` is { situationId } for a situation
+// already listed, or { text, rating } for one in the person's own words (as addOwnGoal).
+// The old steps move to the earlier ladders with the goal they were climbing towards, so
+// every rule now looks only at the new, empty ladder; attempts stay attached to their steps.
+export function startNewLadder(data, choice, { now, today }) {
+  if (!ladderComplete(data)) throw new Error('The ladder is not complete');
+  const picked = choice?.situationId;
+  const typed = str(choice?.text).trim();
+  if (!picked && !typed) return { ok: false, errors: { goal: { kind: 'required' } } };
+  let person;
+  if (picked) {
+    person = setGoal(data.person, picked);
+  } else {
+    const result = addOwnGoal(data.person, typed, choice.rating, { now, today });
+    if (!result.ok) return result;
+    person = result.person;
+  }
   return {
-    baseline,
-    latest: latestSet.ratings[goal],
-    weeks: Math.floor(daysBetween(sets[0].date, latestSet.date) / 7),
+    ok: true,
+    data: {
+      ...data,
+      person,
+      steps: [],
+      earlierLadders: [...data.earlierLadders, { goalSituation: data.person.goalSituation, endedAt: now, steps: data.steps }],
+    },
   };
 }
 
@@ -945,16 +1049,18 @@ export function untickToday(breathing, today) {
   return breathing.filter(d => d !== today);
 }
 
-// The week-of-breathing line on Add a step: no step yet and fewer than 7 of the last 7
-// days ticked. It never blocks (L51, Q18).
+// The week-of-breathing line on Add a step: no step yet on any ladder and fewer than 7 of
+// the last 7 days ticked. It never blocks (L51, Q18).
 export function breathingNudge(data, today) {
-  return data.steps.length === 0 && breathingCount(data.breathing, today) < 7;
+  const anyStep = data.steps.length > 0 || data.earlierLadders.some(l => l.steps.length > 0);
+  return !anyStep && breathingCount(data.breathing, today) < 7;
 }
 
 // ---------------------------------------------------------------- storage, export and import
 
+// `earlierLadders` holds the ladders left behind by Set a new goal, oldest first.
 export function emptyData() {
-  return { person: null, breathing: [], steps: [], attempts: [], backup: null };
+  return { person: null, breathing: [], steps: [], attempts: [], earlierLadders: [], backup: null };
 }
 
 // One shape for what is stored on the phone and for the export file (L126, Q100).
@@ -986,15 +1092,31 @@ function personProblem(p) {
   }
   if (!hasListedSituations(p.situations)) return 'person.situations';
   if (!ids.has(p.goalSituation)) return 'person.goalSituation';
-  if (!Array.isArray(p.ratingSets) || p.ratingSets.length === 0) return 'person.ratingSets';
-  for (const set of p.ratingSets) {
-    if (!set || !isDate(set.date) || !isTimestamp(set.at) || !ratingsComplete(p.situations, set.ratings)) {
-      return 'person.ratingSets';
-    }
-  }
+  if (!ratingSetsOk(p.ratingSets, ids)) return 'person.ratingSets';
   if (p.clarifying !== null && !CLARIFYING_ANSWERS.includes(p.clarifying)) return 'person.clarifying';
   if (!isBool(p.signpostShown) || !isBool(p.welcomeSeen) || !isBool(p.setupDone)) return 'person.flags';
   return null;
+}
+
+// Each set is dated and rates situations on the list, 0 to 10 (Q105). The first is
+// Set-up's. A Set-up or check-in set rates every listed situation and everything rated
+// before it (Q54). An added set holds the first rating of a goal typed later (addOwnGoal),
+// so it rates only situations never rated before. Every situation is rated somewhere.
+function ratingSetsOk(sets, situationIds) {
+  if (!Array.isArray(sets) || sets.length === 0) return false;
+  const rated = new Set();
+  for (const [i, set] of sets.entries()) {
+    if (!set || !isDate(set.date) || !isTimestamp(set.at)) return false;
+    if (!set.ratings || typeof set.ratings !== 'object' || Array.isArray(set.ratings)) return false;
+    const keys = Object.keys(set.ratings);
+    if (keys.some(k => !situationIds.has(k) || !isInt(set.ratings[k], 0, 10))) return false;
+    const added = Object.hasOwn(set, 'added');
+    if (added && set.added !== true) return false;
+    if (added ? i === 0 || keys.length === 0 || keys.some(k => rated.has(k))
+      : ![...SITUATIONS, ...rated].every(k => keys.includes(k))) return false;
+    for (const k of keys) rated.add(k);
+  }
+  return [...situationIds].every(k => rated.has(k));
 }
 
 function stepProblem(s) {
@@ -1008,6 +1130,7 @@ function stepProblem(s) {
   if (!Array.isArray(s.toggles) || s.toggles.some(k => !TOGGLES.includes(k)) || !isText(s.ownItem)) return 'step.toggles';
   if (!isText(s.where) || !isText(s.whatsDifferent) || !isText(s.distractor)) return 'step.text';
   if (!isBool(s.feelsEasy) || !isBool(s.suggested) || !isBool(s.readyEarly)) return 'step.flags';
+  if (!isBool(s.goal)) return 'step.goal';
   if (!isInt(s.rehearsalTarget, 1) || !isInt(s.rehearsalCount, 0)) return 'step.rehearsal';
   if (!Array.isArray(s.rehearsalFeel) || s.rehearsalFeel.some(f => !FEELS.includes(f))) return 'step.rehearsalFeel';
   if (!isWholeOrNull(s.readyEarlyCount, 0) || !isWholeOrNull(s.readyEarlyTarget, 1)) return 'step.readyEarly';
@@ -1033,6 +1156,33 @@ function attemptProblem(a, stepIds) {
   return null;
 }
 
+// One ladder's steps: each one sound, none sharing an id with a step seen before, and at
+// most one marked as the goal.
+function ladderProblem(steps, stepIds) {
+  for (const s of steps) {
+    const issue = stepProblem(s);
+    if (issue) return issue;
+    if (stepIds.has(s.id)) return 'step.id';
+    stepIds.add(s.id);
+  }
+  if (steps.filter(s => s.goal).length > 1) return 'step.goal';
+  return null;
+}
+
+// The ladders left behind by Set a new goal: the goal each was climbing towards (still a
+// situation on the list), when it ended, and its steps. None before Set-up.
+function earlierLaddersProblem(d, stepIds) {
+  if (!Array.isArray(d.earlierLadders)) return 'earlierLadders';
+  if (d.person === null && d.earlierLadders.length > 0) return 'earlierLadders';
+  for (const ladder of d.earlierLadders) {
+    if (!ladder || typeof ladder !== 'object' || !isTimestamp(ladder.endedAt) || !Array.isArray(ladder.steps)
+      || !d.person.situations.some(s => s.id === ladder.goalSituation)) return 'earlierLadders';
+    const issue = ladderProblem(ladder.steps, stepIds);
+    if (issue) return issue;
+  }
+  return null;
+}
+
 function dataProblem(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return 'data';
   if (!('person' in d)) return 'person';
@@ -1042,13 +1192,12 @@ function dataProblem(d) {
     return 'breathing';
   }
   if (!Array.isArray(d.steps) || !Array.isArray(d.attempts)) return 'records';
+  // Step ids are unique across every ladder, and an attempt can belong to a step on any.
   const stepIds = new Set();
-  for (const s of d.steps) {
-    const issue = stepProblem(s);
-    if (issue) return issue;
-    if (stepIds.has(s.id)) return 'step.id';
-    stepIds.add(s.id);
-  }
+  const stepsIssue = ladderProblem(d.steps, stepIds);
+  if (stepsIssue) return stepsIssue;
+  const earlierIssue = earlierLaddersProblem(d, stepIds);
+  if (earlierIssue) return earlierIssue;
   const attemptIds = new Set();
   for (const a of d.attempts) {
     const issue = attemptProblem(a, stepIds);
@@ -1060,8 +1209,17 @@ function dataProblem(d) {
   return null;
 }
 
+// Version 1 had no goal step and no earlier ladders: every step gets goal: false (nothing
+// else does), and there are no earlier ladders yet. The result is checked like any other.
+function upgradeFrom1(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d) || !Array.isArray(d.steps)) return d;
+  const steps = d.steps.map(s => (s && typeof s === 'object' ? { ...s, goal: false } : s));
+  return { ...d, steps, earlierLadders: [] };
+}
+
 // Read a file or stored text. All or nothing: any problem refuses the lot (L126, Q101, Q107).
-// Reasons: notJson, notJellyLegs, unknownVersion, invalid.
+// Version 1 is upgraded first, so a phone holding it keeps everything and the next save
+// writes version 2. Reasons: notJson, notJellyLegs, unknownVersion, invalid.
 export function readFile(text) {
   let parsed;
   try {
@@ -1070,10 +1228,11 @@ export function readFile(text) {
     return { ok: false, reason: 'notJson' };
   }
   if (!parsed || typeof parsed !== 'object' || parsed.app !== APP_ID) return { ok: false, reason: 'notJellyLegs' };
-  if (parsed.schemaVersion !== SCHEMA_VERSION) return { ok: false, reason: 'unknownVersion' };
-  const problem = dataProblem(parsed.data);
+  if (parsed.schemaVersion !== 1 && parsed.schemaVersion !== SCHEMA_VERSION) return { ok: false, reason: 'unknownVersion' };
+  const data = parsed.schemaVersion === 1 ? upgradeFrom1(parsed.data) : parsed.data;
+  const problem = dataProblem(data);
   if (problem) return { ok: false, reason: 'invalid', problem };
-  return { ok: true, data: parsed.data };
+  return { ok: true, data };
 }
 
 // What the phone has stored. Nothing yet: empty. Unreadable: start fresh and keep the

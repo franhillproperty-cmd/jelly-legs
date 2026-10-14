@@ -1,14 +1,15 @@
 // The Ladder (L88-L93): home. The goal and progress, the check-in when it's due, the
-// notices, the steps, and Add a step / Suggest a step in a bar that never scrolls away.
+// notices, the steps, the earlier ladders, and Add a step / Suggest a step in a bar that
+// never scrolls away. Once the goal step settles, Set a new goal takes Suggest's place.
 
 import * as R from '../rules.js';
-import { h, button, link, panel, notice } from '../ui.js';
-import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON, QUIPS } from '../strings.js';
+import { h, button, link, panel, notice, nextId } from '../ui.js';
+import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON, QUIPS, SETUP } from '../strings.js';
 import { rowText, stateText, formatDate, progressText, lastTimeText } from '../format.js';
 import { now, today } from '../store.js';
 import { sceneState } from '../scene.js';
 import { createScene } from '../scene-draw.js';
-import { ratingsList, signpost } from './parts.js';
+import { ratingsList, signpost, goalPicker } from './parts.js';
 
 // Where the jelly was the last time the Ladder was drawn, so that coming back after a step
 // settles, it climbs from there rather than appearing at its new rung.
@@ -24,6 +25,10 @@ export function ladderScreen(app) {
   const from = shown;
   const scene = createScene(from ?? state);
   shown = state;
+  const complete = R.ladderComplete(data);
+  const newLadder = app.flash.newLadder; // just back from Set a new goal
+  delete app.flash.newLadder;
+  const goalLine = h('p', { class: 'goal' }, goal.text);
 
   const notices = [
     on.tooBig ? notice(LADDER.notices.tooBig) : null,
@@ -40,26 +45,34 @@ export function ladderScreen(app) {
       h('h1', {}, LADDER.heading),
       scene.element,
       h('p', { class: 'quip' }, QUIPS[state.quip]),
-      h('p', { class: 'goal' }, goal.text),
+      goalLine,
       h('p', { class: 'progress' }, progressText(person)),
       R.checkInDue(person, today()) ? checkIn(app) : null,
       notices.length ? h('div', { class: 'notices' }, notices) : null,
       data.steps.length
-        ? h('ol', { class: 'steps' }, [order.current, ...order.others].filter(Boolean).map(s => stepRow(app, s, s === order.current)))
-        : emptyLadder(person.pace)),
+        ? h('ol', { class: 'steps' }, [order.current, ...order.others].filter(Boolean).map(s => stepRow(app, s, { current: s === order.current })))
+        : emptyLadder(person.pace),
+      earlierLadders(app)),
     bar: h('div', { class: 'actionbar' },
       button(LADDER.addStep, () => app.go('add'), { primary: true }),
-      button(LADDER.suggestStep, () => suggest(app))),
-    // Two frames on, so the old place has been drawn and the move shows.
+      complete ? button(LADDER.setNewGoal, () => setNewGoal(app)) : button(LADDER.suggestStep, () => suggest(app))),
+    // Two frames on, so the old place has been drawn and the move shows. After a new goal,
+    // back to the top to watch the jelly come down, with the new goal read out.
     after: () => {
+      if (newLadder) {
+        window.scrollTo(0, 0);
+        goalLine.tabIndex = -1;
+        goalLine.focus({ preventScroll: true });
+      }
       if (from) requestAnimationFrame(() => requestAnimationFrame(() => scene.update(state)));
     },
   };
 }
 
-function stepRow(app, step, isCurrent) {
-  const quiet = step.state === 'settled' || step.state === 'didntStay';
-  return h('li', { class: `step-row ${quiet ? 'quiet' : ''} ${isCurrent ? 'current' : ''}` },
+// A row on the ladder, or on an earlier one, which always has the quiet look.
+function stepRow(app, step, { current = false, earlier = false } = {}) {
+  const quiet = earlier || step.state === 'settled' || step.state === 'didntStay';
+  return h('li', { class: `step-row ${quiet ? 'quiet' : ''} ${current ? 'current' : ''}` },
     h('a', { href: `#/step/${step.id}` },
       h('span', { class: 'title' }, step.title),
       h('span', { class: 'values' }, rowText(step, app.data().person.pace)),
@@ -67,13 +80,27 @@ function stepRow(app, step, isCurrent) {
       h('span', { class: `state state-${step.state}` }, stateText(step.state))));
 }
 
-// Before any step exists: one sentence and the example ladder, as an illustration (L92, Q67, Q95).
+// Before any step exists on this ladder: one sentence and the example ladder, as an
+// illustration (L92, Q67, Q95).
 function emptyLadder(pace) {
   return h('div', { class: 'empty' },
     h('p', {}, LADDER.empty),
     h('ol', { class: 'example' }, EXAMPLE_LADDER.map(s => h('li', {},
       h('span', { class: 'title' }, s.title),
       h('span', { class: 'values' }, rowText(s, pace))))));
+}
+
+// The ladders before this one, at the foot: newest ladder first, each under the goal it
+// was climbing towards, its steps newest first. Each step opens read-only.
+function earlierLadders(app) {
+  const { person, earlierLadders: ladders } = app.data();
+  if (!ladders.length) return null;
+  const newestFirst = steps => [...steps].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return h('section', { class: 'earlier' },
+    h('h2', {}, LADDER.earlier),
+    [...ladders].reverse().map(ladder => h('div', { class: 'earlier-ladder' },
+      h('h3', { class: 'earlier-goal' }, person.situations.find(s => s.id === ladder.goalSituation)?.text),
+      ladder.steps.length ? h('ol', { class: 'steps' }, newestFirst(ladder.steps).map(s => stepRow(app, s, { earlier: true }))) : null)));
 }
 
 // Every 28 days: the situations again, saved as a dated set (L89, Q54).
@@ -145,4 +172,42 @@ async function suggest(app) {
       })));
 
   start();
+}
+
+// Set a new goal, once the goal step has settled: pick a situation or type one and rate
+// it. Save starts a new, empty ladder; the old steps go to the earlier ladders. Typed
+// words count as unsaved input, so Back asks first (Q63).
+async function setNewGoal(app) {
+  if (!(await app.canLeave())) return; // a half-done check-in (Q63)
+  const p = panel({ label: LADDER.setNewGoal, canClose: app.canLeave });
+  const headingId = nextId('new-goal');
+  const picker = goalPicker({
+    situations: app.data().person.situations, labelledBy: headingId, unpickOnType: true,
+    onType: v => app.setDirty(!!v.trim()),
+  });
+  const save = () => {
+    // The latest data, in case another copy of the app changed the ladder (Q119).
+    if (!R.ladderComplete(app.data())) {
+      p.close();
+      app.render();
+      return;
+    }
+    const result = R.startNewLadder(app.data(), picker.choice(), { now: now(), today: today() });
+    if (!result.ok) {
+      picker.showErrors(result.errors)?.scrollIntoView({ block: 'center' });
+      return;
+    }
+    app.setDirty(false);
+    app.flash.newLadder = true;
+    if (!app.save(result.data)) {
+      delete app.flash.newLadder;
+      app.setDirty(!!picker.text());
+      return;
+    }
+    p.close();
+  };
+  p.fill(
+    h('h2', { id: headingId }, SETUP.goalLabel),
+    picker,
+    button(COMMON.save, save, { primary: true }));
 }

@@ -76,18 +76,30 @@ export const tell = (body, label = COMMON.ok) => ask({ body: [].concat(body), bu
 
 // A full-screen panel over the current screen (Q61), with a back control at the top left.
 // Each time its content is filled, focus moves to the new heading or first line, so a
-// screen reader reads the new step of the panel.
-export function panel({ label } = {}) {
+// screen reader reads the new step of the panel. `canClose` is asked before the back
+// control or Escape closes it, so a panel with typed input can ask first (Q63).
+export function panel({ label, canClose = async () => true } = {}) {
   const d = h('dialog', { class: 'panel', 'aria-label': label });
   const content = h('div', { class: 'panel-content' });
   const close = () => {
     d.close();
     d.remove();
   };
-  d.append(h('div', { class: 'topbar' }, h('button', { type: 'button', class: 'back', onclick: close }, COMMON.back)), content);
+  // A second Escape or back gesture with no tap in between can't be held back, so the
+  // browser may have closed the panel by the time the person answers; Stay puts it back,
+  // with what they typed and where they were.
+  const leave = async () => {
+    const was = document.activeElement;
+    if (await canClose()) close();
+    else if (!d.open && d.isConnected) {
+      d.showModal();
+      if (d.contains(was)) was.focus();
+    }
+  };
+  d.append(h('div', { class: 'topbar' }, h('button', { type: 'button', class: 'back', onclick: leave }, COMMON.back)), content);
   d.addEventListener('cancel', e => {
     e.preventDefault();
-    close();
+    leave();
   });
   document.body.append(d);
   d.showModal();

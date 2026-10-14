@@ -981,9 +981,13 @@ describe('Import rejects a file with an unknown schema version', () => {
     return w.data;
   }
 
-  it('refuses version 2', () => {
-    const text = JSON.stringify({ app: R.APP_ID, schemaVersion: 2, data: fullData() });
-    assert.deepEqual(R.readFile(text), { ok: false, reason: 'unknownVersion' });
+  it('refuses version 3, version 0, a version written as text, and no version (1 and 2 are read)', () => {
+    for (const schemaVersion of [3, 0, '2', undefined]) {
+      const text = JSON.stringify({ app: R.APP_ID, schemaVersion, data: fullData() });
+      assert.deepEqual(R.readFile(text), { ok: false, reason: 'unknownVersion' }, String(schemaVersion));
+    }
+    assert.equal(R.SCHEMA_VERSION, 2);
+    assert.equal(JSON.parse(R.serialise(fullData(), at(1))).schemaVersion, 2);
   });
 
   it('round-trips a full export, and a phone with no Set-up yet; stored data reads back as it was', () => {
@@ -1452,7 +1456,7 @@ describe('Set-up and the goal (L81, Q52, Q59)', () => {
     assert.deepEqual(R.progress(person), { baseline: 6, latest: null, weeks: null });
   });
 
-  it('the goal can only be changed to a situation already rated', () => {
+  it('picking a goal takes only a situation already listed (a typed goal goes through addOwnGoal, Q52 replaced)', () => {
     const person = makePerson();
     assert.equal(R.setGoal(person, 'toast').goalSituation, 'toast');
     assert.throws(() => R.setGoal(person, 'something new'));

@@ -280,7 +280,7 @@ Set-up is shown only once. When the find-somewhere line asks the person to find 
 **52. Changing the goal in Settings.** (L43, 82, 107)
 A newly typed goal has no Set-up rating, so the progress line has no "when you started".
 *If your call:* in Settings the goal can only be picked from the existing situations. Its first rating is the baseline.
-**Answer:** As suggested.
+**Answer:** (Replaced 14 Oct 2026.) Settings lets the person type their own goal, added to the situations list and rated there. Builder's reading: a goal's first rating is still its baseline, so for a goal typed in Settings the progress line starts from the rating given when it was typed. The same box and rating are used in Set a new goal (140).
 
 **53. The 9-or-10 clarifying question.** (L43, 81, 166)
 Is it asked again at check-ins? Does it go away if the 9 is lowered? Does "the signpost line once" mean once ever? Nowhere stores the answer.
@@ -616,6 +616,7 @@ May I add these?
 Can situations be added at a check-in?
 *If your call:* fixed ids for the listed situations; ratings stored as dated sets with the first set as the baseline; new situations only at Set-up.
 **Answer:** As suggested.
+Note 14 Oct 2026: situations can now also be added by typing a goal in Settings (52, replaced) or in Set a new goal (140). Each is rated on its own, in a dated set of its own, and the check-ins rate it with the rest from then on.
 
 **106. The export file.** (L107, 126)
 *If your call:* named `jelly-legs-2026-10-13.json`, marked as a Jelly Legs file with its schema version.
@@ -654,6 +655,7 @@ There, a plain download often opens a preview instead of saving the file.
 
 **115. Looks.** System fonts, neutral colours with one accent, follows the phone's dark mode, strong contrast, tap targets at least 48px, and a words-only tab bar. Settled and didn't-stay steps shown in grey.
 **Answer:** (Replaced twice, 13 Oct 2026; this is the current answer.) Accent colour: orange. Use one bright orange (#F97316, or warmer if it still reads red: #FB8C1A) everywhere orange appears. Text on orange is near-black (#1A1A1A), never white. No text is coloured orange; links and labels stay in the normal text colour, and orange marks them with a fill, an underline or a shape instead. Drop the deep orange (#C2410C) entirely. Check every orange surface for 4.5:1 contrast with its dark text in both light and dark mode. Ground: off-white in light mode, near-black in dark mode. Secondary colour for the quieter states (settled, didn't stay): a dark blue-grey. Icon: the ladder in bright orange on white.
+Note 14 Oct 2026: the fonts are now Fraunces and Source Sans 3, bundled with the app (136), and the exact colours are in 137.
 
 **116. The icon.** I draw a plain shape (a simple ladder), make the PNG files with a small script, and list it in GAPS.md for you to replace.
 **Answer:** Yes.
@@ -744,3 +746,44 @@ Under 129, toggles are only switched off when every dial is at its bottom, and t
 (b) Whenever the only thing that got harder since the last settled step is a toggle or the own item, suggest switching it off ("the thing that changed is the thing that bit"), whatever the dials are.
 (c) When the app asks which dial, also offer the toggles that are on as things to switch off.
 **Answer:** (b), with (c) added for the case where nothing stands out. Rule 5 was always "the thing that changed is the thing that bit", and a toggle is a thing that can change. So: compare the step with the last settled step across dials, toggles and the own item together. If exactly one thing got harder, suggest undoing that one, whether it's a dial or a toggle. If nothing got harder, or more than one thing did, ask the person which to turn down, and the list they choose from holds the dials that aren't at their bottom plus every toggle that's on (and the own item if filled), each with its switch-off wording. Rule 129 then becomes a special case of this: when every dial is at its bottom, the list contains only toggles. The stranger example gets "Try it with people you know" straight away, because the toggle was the one change.
+
+## N. Raised after the look stage
+
+Answered 14 Oct 2026.
+
+**136. The fonts.** (L113, L132, L274, Q115)
+L132 says system fonts, and L113 and L274 rule out external fonts. The second half of the look stage uses Fraunces for headings and Source Sans 3 for the body, both free under the SIL Open Font License. Downloaded into the app's own folder with their licences, they would be served by the app itself, so no font would come from anywhere else. May I download them as listed: Fraunces as one variable file, and Source Sans 3 as variable upright and italic files?
+**Answer:** Yes: download the fonts as listed.
+
+**137. The palette, and the blue-grey in dark mode.** (Q115)
+The colours for the second half of the look stage. The dark blue-grey #4F6F8F is 3.6:1 on the near-black ground, under the 4.5:1 that text needs, so settled and didn't-stay steps would be hard to read in dark mode.
+**Answer:** Off-white ground (#FBF7F2) in light mode, near-black (#141210) in dark; bright orange (#F97316) as the accent with near-black text on it, never white; cards with 14px radius and a soft border; a dark blue-grey (#4F6F8F) for settled and didn't-stay states. Then, for dark mode: #8AA4BF for settled and didn't-stay text in dark mode, #4F6F8F in light.
+
+**138. Reaching the goal.** (L43, L89)
+PLAN.md gives a ladder no end: once the person can do what they set out to do, the notices and Suggest a step carry on as before.
+**Answer:** Fran's spec, in her words:
+> Add a 'ladder complete' state, set when the goal step settles. On completion, show a one-time message (words in Content, Fran to edit): 'You've reached what you set out to do. From here, nerves before a speech aren't a sign the step's too big; they're what speaking feels like. Keep logging if you like, but you're not climbing any more.' While complete: the too-big notice, friends line and one-thing warning are off; Suggest a step is replaced by 'Set a new goal', which opens the goal picker and starts a new ladder (old steps kept, state cleared); the scene shows the jelly at the lectern with the quip 'Jelly legs are optional now.' Under 'How hard was it to stay?' on Log an attempt, add: 'Rate how hard it was to stay to the end, not how nervous you were. Nerves beforehand are normal and don't count.' Add unit tests for the completion state and the switched-off rules.
+
+**139. Which step is "the goal step"?** (138)
+The goal is one of the situations (Set-up's Field 5), not a step, and a step doesn't say which situation it works towards, so nothing tells the app whose settling completes the ladder.
+**Answer:** The person marks it. Add a step and Edit get a switch ("This is my goal", wording to be listed in GAPS.md for Fran). Only one step can be marked. The ladder is complete when the marked step settles.
+
+**140. "Old steps kept, state cleared": kept where?** (138)
+Left on the Ladder, the old steps would keep the too-big notice, the friends line, the floor and Suggest working from the old ladder.
+**Answer:** Off the Ladder, still viewable. They move into an 'Earlier ladder' list at the foot of the Ladder, still tappable. The rules (too-big notice, friends line, floor, Suggest) look only at the new ladder's steps. Everything stays in the export.
+
+**141. Where the one-time message goes.** (138, L105)
+The spec says to show it once, on completion, but not where.
+**Answer:** Under the reply. On the reply screen after the attempt that settles the goal step, under the usual reply, with the confetti. Shown that one time.
+
+**142. The hint on Log an attempt.** (138, L103, Q94)
+The spec adds a line to Log an attempt saying what the 0 to 10 rating measures.
+**Answer:** From the spec: under 'How hard was it to stay?' on Log an attempt, add: 'Rate how hard it was to stay to the end, not how nervous you were. Nerves beforehand are normal and don't count.'
+
+**143. Words for the four labels the ladder-complete work added.** (139, 140, Q88)
+The goal switch, the heading over the old ladders, the line on a step from one of them, and the question over the rating of a goal typed in Settings or Set a new goal went on screen in square brackets.
+**Answer:** 'This is my goal' → 'My goal'; 'Earlier ladders' → 'Ladders you've finished'; 'From an earlier ladder' → 'From a ladder you finished'; the fourth already has wording in answer 88 ('How frightening does each of these feel right now?'), use that.
+
+**144. The builder's calls in the ladder-complete work.** (138 to 142, Q52)
+Six calls made while building: completion worked out fresh each time, so deleting the settling attempt, changing the goal step's dials or unmarking it undoes it; a new ladder starts afresh for the too-big notice, the friends line, the floor and Suggest; the plus two carries across ladders (Q133); a goal typed in Settings is rated under that day's date without moving the check-in clock, and that first rating is its "when you started"; the labels in square brackets (since worded, 143); the stored data moves to version 2, and data already on a phone is upgraded when the app opens.
+**Answer:** All six decisions stand.

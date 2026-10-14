@@ -1,6 +1,7 @@
 // Pieces more than one screen uses: the venue field with its help and searches (Set-up and
-// Settings, Q51), the pace field with Time yourself (Set-up and Settings), the signpost,
-// and import and export (Welcome and Settings, Q65).
+// Settings, Q51), the pace field with Time yourself (Set-up and Settings), the goal picker
+// (Settings and Set a new goal), the signpost, and import and export (Welcome and
+// Settings, Q65).
 
 import * as R from '../rules.js';
 import { h, textField, choices, rating, button, outLink, panel, ask, tell } from '../ui.js';
@@ -123,6 +124,68 @@ export function ratingsList({ situations, ratings, onRate, onRemove }) {
     return first;
   };
   return Object.assign(h('div', { class: 'ratings' }, groups), { groups, markMissing });
+}
+
+// The goal (L82, Q52 replaced): the situations in one column, and a box for a goal in the
+// person's own words, whose 0-10 rating appears under it once it has text. Enter in the
+// box moves to the rating. Picking a situation empties the box; with `unpickOnType` (Set a
+// new goal), typing un-picks the situation. Settings leaves its pick showing, since that
+// is already saved. `extra` holds the rating, for a screen to add its own Save to.
+export function goalPicker({ situations, value = null, legend, labelledBy, unpickOnType = false, onPick, onType }) {
+  let picked = value;
+  let rated = null;
+  const group = choices({
+    legend, columns: 1, value,
+    options: situations.map(s => ({ value: s.id, label: s.text })),
+    onChange: id => {
+      picked = id;
+      group.setError(null);
+      own.input.value = '';
+      typed('');
+      onPick?.(id);
+    },
+  });
+  if (labelledBy) group.setAttribute('aria-labelledby', labelledBy);
+  const own = textField({ label: SETUP.ownGoal, enterkeyhint: 'next', onInput: v => typed(v) });
+  const rate = rating({ legend: SETUP.situationsLabel, ends: SETUP.ends, onChange: n => { rated = n; rate.setError(null); } });
+  const extra = h('div', { hidden: true }, rate);
+  const text = () => own.input.value.trim();
+
+  // The rating belongs to the typed words: it goes, answer and all, when the box empties.
+  function typed(v) {
+    own.setError(null);
+    if (v.trim()) group.setError(null); // typing a goal answers the question too
+    if (unpickOnType && v.trim() && picked !== null) {
+      picked = null;
+      group.setValue(null);
+    }
+    if (!text() && !extra.hidden) {
+      rated = null;
+      rate.setValue(null);
+      rate.setError(null);
+    }
+    extra.hidden = !text();
+    onType?.(v);
+  }
+  own.input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (!extra.hidden) (rate.querySelector('input:checked') ?? rate.querySelector('input')).focus();
+  });
+
+  // Errors from addOwnGoal or startNewLadder, each on its own control; returns the first.
+  const showErrors = errors => {
+    group.setError(errors.goal ? COMMON.required : null);
+    own.setError(errors.text ? COMMON.required : null);
+    rate.setError(errors.rating ? COMMON.required : null);
+    return [errors.goal && group, errors.text && own, errors.rating && rate].find(Boolean) ?? null;
+  };
+  return Object.assign(h('div', {}, group, own, extra), {
+    group, extra, text, showErrors,
+    rating: () => rated,
+    // What startNewLadder takes: the typed goal, else the picked situation, else nothing.
+    choice: () => (text() ? { text: text(), rating: rated } : picked ? { situationId: picked } : null),
+  });
 }
 
 // The signpost, with how to find one (L35, L43, L47, Q80).

@@ -1,6 +1,7 @@
 // Colour contrast (Q115, L132): one bright orange, with near-black text on it, never white;
-// no text coloured orange; every text pairing at least 4.5:1, in light and dark mode. The
-// values are read from public/styles.css, so changing a colour there is checked here.
+// no text coloured orange; every text pairing at least 4.5:1, in light and dark mode; the
+// grounds, blue-greys and card radius Fran chose. The values are read from
+// public/styles.css, so changing a colour there is checked here.
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
 const css = readFileSync(join(PUBLIC, 'styles.css'), 'utf8');
+const appFiles = () => readdirSync(PUBLIC, { recursive: true }).filter(f => /\.(css|js|html)$/.test(f));
 
 function tokens(block) {
   const found = {};
@@ -40,6 +42,7 @@ const PAIRS = [
   ['muted', 'bg', TEXT, 'hints and secondary text'],
   ['muted', 'surface', TEXT, 'secondary text on cards'],
   ['quiet', 'bg', TEXT, 'settled and didn\'t-stay steps'],
+  ['quiet', 'surface', TEXT, 'settled and didn\'t-stay text on cards'],
   ['error', 'bg', TEXT, 'error messages'],
   ['error', 'surface', TEXT, 'error messages on cards'],
   ['input-border', 'bg', SHAPE, 'edges of text boxes, choices and buttons'],
@@ -75,9 +78,43 @@ describe('The orange (Q115)', () => {
 
   it('nothing white sits on orange, and no other orange is left anywhere in the app', () => {
     assert.equal(css.match(/var\(--(?:accent|bright)[\w-]*\)/g), null);
-    for (const file of readdirSync(PUBLIC, { recursive: true }).filter(f => /\.(css|js|html)$/.test(f))) {
+    for (const file of appFiles()) {
       const text = readFileSync(join(PUBLIC, file), 'utf8').toLowerCase();
       for (const old of ['#c2410c', '#ea580c']) assert.ok(!text.includes(old), `${old} in ${file}`);
+    }
+  });
+});
+
+describe('The grounds, the blue-grey and the cards (Q115)', () => {
+  it('an off-white ground in light mode, near-black in dark, and the phone\'s bar to match', () => {
+    assert.equal(light.bg, '#fbf7f2');
+    assert.equal(dark.bg, '#141210');
+    const html = readFileSync(join(PUBLIC, 'index.html'), 'utf8').toLowerCase();
+    const bar = mode => html.match(new RegExp(`<meta name="theme-color" content="(#[0-9a-f]{6})" media="\\(prefers-color-scheme: ${mode}\\)">`))?.[1];
+    assert.deepEqual([bar('light'), bar('dark')], [light.bg, dark.bg]);
+  });
+
+  it('settled and didn\'t-stay text is the dark blue-grey in light mode, lighter in dark', () => {
+    assert.equal(light.quiet, '#4f6f8f');
+    assert.equal(dark.quiet, '#8aa4bf');
+  });
+
+  it('the decorative blue-grey (confetti, the scene) is the same in both modes', () => {
+    assert.equal(light['blue-grey'], '#4f6f8f');
+    assert.equal(dark['blue-grey'], light['blue-grey']);
+  });
+
+  it('cards have a 14px radius and a soft border of their own in each mode', () => {
+    assert.equal(light['card-radius'], '14px');
+    assert.equal(dark['card-radius'], '14px');
+    assert.ok(light['card-border'] && dark['card-border'], 'a --card-border in both modes');
+    assert.notEqual(dark['card-border'], light['card-border']);
+  });
+
+  it('the old grounds and the old blue-greys are gone from the app', () => {
+    for (const file of appFiles()) {
+      const text = readFileSync(join(PUBLIC, file), 'utf8').toLowerCase();
+      for (const old of ['#faf8f5', '#151311', '#475569', '#94a3b8']) assert.ok(!text.includes(old), `${old} in ${file}`);
     }
   });
 });

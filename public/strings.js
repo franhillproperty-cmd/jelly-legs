@@ -223,10 +223,13 @@ export const LADDER = {
   empty: 'Your ladder starts here. Add a step, or let the app suggest one. This is the shape a ladder can take:', // Q75
   addStep: 'Add a step',
   suggestStep: 'Suggest a step',
+  setNewGoal: 'Set a new goal', // in place of Suggest a step while the ladder is complete (Fran's words)
+  earlier: 'Ladders you\'ve finished', // Q143
 };
 
 // The quip under the Ladder's scene, chosen by progress (the look stage). Fran to rewrite.
 export const QUIPS = {
+  complete: 'Jelly legs are optional now.', // while the ladder is complete (Fran's words)
   none: 'Jelly legs, at the bottom, looking up.',
   firstStep: 'One foot on the ladder. That counts.',
   didntStay: 'Came back down. The ladder\'s still here.',
@@ -288,6 +291,7 @@ export const FORM = {
     'someone else talking in the room', 'a window onto a busy street', 'a video playing on the phone',
   ],
   target: 'Run-throughs with it on before you\'re ready',
+  goalStep: 'My goal', // Q143
   targetHigher: 'Last time you said you needed more rehearsal, so this starts higher.', // L53, Q74
   breathingNudge: n => `A week of the breathing exercise before your first step makes the step easier. You've done ${n} of the last 7 days.`, // Q18
   discard: 'Leave without saving? What you\'ve typed will be lost.', // Q76
@@ -343,6 +347,7 @@ export const STEP = {
   didntStay: 'Didn\'t stay',
   deleteAttempt: 'Delete',
   deleteAttemptQuestion: 'Delete this attempt? There\'s no undo.', // Q24
+  fromEarlier: 'From a ladder you finished', // Q143
 };
 
 // ---------------------------------------------------------------- log an attempt (L103-L105)
@@ -353,6 +358,7 @@ export const LOG = {
   future: 'An attempt can\'t be dated in the future.', // Q132
   stayed: 'Did you stay to the end?',
   hard: 'How hard was it to stay?',
+  hardHint: 'Rate how hard it was to stay to the end, not how nervous you were. Nerves beforehand are normal and don\'t count.', // Fran's words
   ends: { low: 'easy', high: 'nearly walked off' }, // L31, Q94
   learning: 'This is where the learning is. The embarrassment is part of it, and you\'ll remember it far longer than anyone else in the room will.', // Q47
   wentWrong: 'What went wrong?',
@@ -367,6 +373,12 @@ export const REPLIES = { // L222-L228, Q100, Q101
   hard: 'You stayed. That\'s the whole job. It was hard, which means this step is still doing its work. Do the same one again and expect it to feel a little easier.',
   hardAgain: 'You\'ve stayed through it more than once and it\'s still hard. That usually means the step is bigger than it needs to be. Turn one dial down, settle that one, and come back to this.',
   easy: 'That one\'s done. It didn\'t bother you much, so there\'s nothing to repeat. Add the next step, change one thing, and keep it small enough to be almost silly.',
+};
+
+// Under the reply, once, after the attempt that settles the step marked as the goal.
+// Fran's words, a Content draft for her to edit.
+export const COMPLETE = {
+  message: 'You\'ve reached what you set out to do. From here, nerves before a speech aren\'t a sign the step\'s too big; they\'re what speaking feels like. Keep logging if you like, but you\'re not climbing any more.',
 };
 
 // ---------------------------------------------------------------- settings (L107, L117, Q76, Q108)

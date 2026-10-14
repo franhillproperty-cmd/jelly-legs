@@ -20,8 +20,14 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
+  // The fonts in public/fonts, and the licences that travel with them.
+  '.woff2': 'font/woff2',
+  '.txt': 'text/plain; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
+// The stylesheet's address is absolute so this page is styled at any depth; the fonts'
+// addresses in it are relative to the stylesheet, so they resolve to /fonts/ here too.
 const notFoundPage = `<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${APP_NAME}</title>
 <link rel="stylesheet" href="/styles.css"></head><body><div id="app"><main>

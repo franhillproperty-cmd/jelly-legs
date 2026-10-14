@@ -48,6 +48,7 @@ export const stateText = state => STATE_LABELS[state];
 // Whole numbers as words, British style: "one hundred and four" (Q55).
 export function numberWords(n) {
   const { small, tens, hundred, and } = NUMBER_WORDS;
+  if (!Number.isInteger(n) || n < 0) return String(n); // never expected; never a blank screen
   if (n < 20) return small[n];
   if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? `-${small[n % 10]}` : '');
   if (n < 1000) return `${small[Math.floor(n / 100)]} ${hundred}${n % 100 ? ` ${and} ${numberWords(n % 100)}` : ''}`;
