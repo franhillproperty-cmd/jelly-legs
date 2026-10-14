@@ -21,7 +21,7 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 | Q | What | Where | Now |
 | --- | --- | --- | --- |
 | Q44, Q133 | Whether the "plus two" stays at all | `REHEARSAL_BOOST` in `public/rules.js` | 2 |
-| Q109 | Test Export on her phone, opened from the home-screen icon | `exportData` in `public/screens/parts.js` | plain download, the share sheet on an iPhone home-screen app |
+| Q109 | Test Export on her phone, opened from the home-screen icon | `exportData` in `public/screens/parts.js` | done on her iPhone, 14 Oct 2026: the share sheet opens; Android still to try |
 | Q110 | Git author for this repository | `.git/config` | Fran <franhillproperty@gmail.com> |
 | Q120 | An own domain: only before anyone else uses the app, since moving later strands their data | (Railway, stage 3) | the Railway address |
 | Q116 | The home-screen icon: a placeholder ladder in the bright orange on white, for Fran to replace | the drawing in `scripts/make-icons.mjs`, then `node scripts/make-icons.mjs` | `public/apple-touch-icon.png`, `public/icons/` |
@@ -265,4 +265,5 @@ Set a new goal and the earlier ladders
 - On an iPhone, the home-screen app keeps its own storage, separate from Safari's: a ladder started in Safari isn't in the home-screen app. Add it to the home screen before entering anything, or move the data with Export and Import. The app-open-twice check (Q119) can't reach between the two.
 
 ## 4. Not built yet
-- Stage 4: started early. BUGS.md and TESTING.md exist since bug 1; stage 4 checks them.
+- Nothing: all four stages are built. Stage 4 (14 Oct 2026) checked BUGS.md and TESTING.md: TESTING.md has every checklist line from PLAN.md's Testing section word for word, plus PLAN.md's review paragraph, which had been left out; the automated items are ticked, each saying which tests cover it; and test/docs.test.js now keeps both files complete.
+- Still to do by hand (TESTING.md): the phone checklist as a first-time user; the break-it tests; on Railway, the Android checks, the console on the phones, and a pushed change reaching the phone; and, before the soft launch, the review by someone who didn't build it, in a new Claude Code session.
