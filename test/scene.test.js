@@ -2,7 +2,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { sceneState, stepJellyWobble, replyScene, notchPlace, towardsGoal, ladderHeight, NO_GOAL_HEIGHT } from '../public/scene.js';
+import { sceneState, stepJellyWobble, replyScene, notchPlace, towardsGoal, ladderHeight, NO_GOAL_RUNG, NO_GOAL_HEIGHT } from '../public/scene.js';
 import { QUIPS, STEP } from '../public/strings.js';
 import * as R from '../public/rules.js';
 
@@ -48,11 +48,14 @@ describe('Where the jelly is: how far it has come towards the goal step (Q148)',
     assert.deepEqual([s.position, s.atTop], [6 / 13, false]);
   });
 
-  it('with no goal step, settled steps out of all the steps, never above halfway, and the stage stays empty', () => {
-    assert.equal(NO_GOAL_HEIGHT, 0.5);
+  it('with no goal step, one rung of eight for each settled step, up to four (halfway), and the stage stays empty (Q153)', () => {
+    assert.deepEqual([NO_GOAL_RUNG, NO_GOAL_HEIGHT], [1 / 8, 0.5]);
+    const height = settled => sceneState(data([...Array(settled).fill('settled'), 'rehearsing', 'planning'])).position;
+    assert.deepEqual([0, 1, 2, 3, 4, 5, 9].map(height), [0, 1 / 8, 2 / 8, 3 / 8, 4 / 8, 4 / 8, 4 / 8]);
+    // Open steps don't pull it down: one settled step is a rung however many steps there are.
+    assert.equal(sceneState(data(['settled', ...Array(10).fill('rehearsing')])).position, 1 / 8);
     assert.deepEqual([sceneState(data([])).position, sceneState(data([])).atTop], [0, false]);
-    assert.equal(sceneState(data(['settled', 'settled', 'rehearsing', 'planning'])).position, 0.25);
-    const all = sceneState(withGoal(['settled', 'settled'], -1, [], [GOAL, GOAL]));
+    const all = sceneState(withGoal(['settled', 'settled', 'settled', 'settled', 'settled'], -1, [], Array(5).fill(GOAL)));
     assert.deepEqual([all.position, all.atTop], [0.5, false]);
   });
 
@@ -119,8 +122,9 @@ describe('The quip, chosen by the jelly\'s height', () => {
     assert.equal(quip([]), 'Jelly legs, at the bottom, looking up.');
     assert.equal(quip(['planning']), 'One foot on the ladder. That counts.');
     assert.equal(quip(['settled', 'rehearsing', 'rehearsing']), 'One foot on the ladder. That counts.');
-    assert.equal(quip(['settled', 'rehearsing']), 'Wobbling, climbing, still here.');
-    assert.equal(quip(['settled', 'settled']), 'Halfway up and the knees have mostly stopped knocking.');
+    assert.equal(quip(['settled', 'rehearsing']), 'One foot on the ladder. That counts.');
+    assert.equal(quip(['settled', 'settled', 'rehearsing']), 'Wobbling, climbing, still here.');
+    assert.equal(quip(['settled', 'settled', 'settled', 'settled']), 'Halfway up and the knees have mostly stopped knocking.');
     const near = { words: 200, people: 10, visibility: 'clearly', matters: 'notMuch' }; // 12 of 13
     assert.equal(quip(['settled', 'rehearsing'], 1, [near, GOAL]), 'Nearly there. The lectern\'s looking smaller.');
   });
@@ -137,7 +141,7 @@ describe('The quip, chosen by the jelly\'s height', () => {
 
   it('after a didn\'t stay, until the next attempt', () => {
     assert.equal(quip(['settled', 'didntStay', 'rehearsing', 'rehearsing'], -1, [], [attempt(false, 8, 's1')]), 'Came back down. The ladder\'s still here.');
-    assert.equal(quip(['settled', 'ready'], -1, [], [attempt(false, 8, 's1'), attempt(true, 5, 's1')]), 'Wobbling, climbing, still here.');
+    assert.equal(quip(['settled', 'ready'], -1, [], [attempt(false, 8, 's1'), attempt(true, 5, 's1')]), 'One foot on the ladder. That counts.');
   });
 
   it('a didn\'t stay on an earlier ladder\'s step doesn\'t count', () => {

@@ -6,8 +6,9 @@ import { EASY_LINE, DIALS, NOTCHES, ladderComplete, goalStep } from './rules.js'
 
 const byLogged = (a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0);
 
-// With no step marked My goal there is no top to measure against, so the jelly climbs only
-// the bottom half of the ladder (Q148).
+// With no step marked My goal there is no top to measure against, so each settled step is
+// one rung of the drawing's eight, up to four: halfway, and no higher (Q148, Q153).
+export const NO_GOAL_RUNG = 1 / 8;
 export const NO_GOAL_HEIGHT = 0.5;
 
 // A dial's place on its notches, counted from the floor's notch as 0. Words and people
@@ -33,12 +34,12 @@ export function towardsGoal(step, goal) {
 }
 
 // The jelly's height on the ladder, 0 to 1 (Q148): the settled step nearest the goal step,
-// measured against the goal step's dials. With no goal step, settled steps out of all the
-// steps, no higher than halfway.
+// measured against the goal step's dials. With no goal step, one rung for each settled step,
+// up to four rungs (halfway).
 export function ladderHeight(data) {
   const settled = data.steps.filter(s => s.state === 'settled');
   const goal = goalStep(data.steps);
-  if (!goal) return data.steps.length ? (settled.length / data.steps.length) * NO_GOAL_HEIGHT : 0;
+  if (!goal) return Math.min(settled.length * NO_GOAL_RUNG, NO_GOAL_HEIGHT);
   return Math.max(0, ...settled.map(s => towardsGoal(s, goal)));
 }
 

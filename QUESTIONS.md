@@ -817,3 +817,6 @@ Under answer 150 it could only show once the goal step has settled, and then the
 **152. Railway's deployment config.** (L134, stage 3)
 Railway has stopped reading `railway.json` / `railway.toml` for new services (deprecated, cut-off 1 December 2026). Their replacement, `.railway/railway.ts`, needs the `railway` npm package and a separate apply step.
 *Builder's call (stage 3):* no Railway config file. `railpack.json` (Railway's builder) runs `node server.js`, package.json pins Node 24, and README.md has the few dashboard settings as a checklist for Fran. Listed in GAPS.md.
+
+**153. The jelly's height with no goal step.** (Q148)
+**Answer:** Change the jelly's height when no step is marked My goal. Instead of settled steps divided by all steps, count each settled step as one rung of eight, capped at four rungs (halfway): one settled step is 1/8, two are 2/8, three are 3/8, four or more are 4/8. With a goal step, keep the current goal-progress rule. Update the tests.
