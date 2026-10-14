@@ -55,12 +55,13 @@ Run the unit tests from the project folder with `node --test`.
 
 **Live on Railway** (stage 3; after the first deploy, and again after any change to server.js, the manifest or the icon):
 
-- [ ] The Railway address opens over https, and http:// goes to https://.
-- [ ] `curl.exe -sI https://<app>.up.railway.app/` and `curl.exe -sI https://<app>.up.railway.app/nope` (in Windows PowerShell type `curl.exe`; elsewhere plain `curl`): each shows Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy, X-Frame-Options and Strict-Transport-Security once, and the second starts with a 404 line.
-- [ ] Open https://<app>.up.railway.app/nope in a browser: the "Nothing here." page, styled like the app, with "Back to Jelly Legs" taking you to the app.
+- [x] The Railway address opens over https, and http:// goes to https://. (Checked 14 Oct 2026 against https://jelly-legs-production.up.railway.app.)
+- [x] `curl.exe -sI https://<app>.up.railway.app/` and `curl.exe -sI https://<app>.up.railway.app/nope` (in Windows PowerShell type `curl.exe`; elsewhere plain `curl`): each shows Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy, X-Frame-Options and Strict-Transport-Security once, and the second starts with a 404 line. (Checked 14 Oct 2026 against https://jelly-legs-production.up.railway.app.)
+- [x] Open https://<app>.up.railway.app/nope in a browser: the "Nothing here." page, styled like the app, with "Back to Jelly Legs" taking you to the app. (Checked 14 Oct 2026 against https://jelly-legs-production.up.railway.app.)
 - [ ] Android, Chrome: the menu offers to install or add to the home screen; the icon is the orange ladder on white, not cut off; it opens with no browser bars; the status bar matches the page in light and dark mode; it works either way up; Export saves a file.
 - [ ] iPhone, Safari (this iOS and the one before): Share, Add to Home Screen; the label is "Jelly Legs" and the icon the orange ladder on white; it opens with no Safari bars; the status bar is readable in light and dark mode; nothing is under the notch either way up; Export opens the share sheet (Q109).
 - [ ] Open every screen with the browser's developer console showing (Safari's Web Inspector from a Mac for an iPhone, if there is one): no "Content Security Policy" messages.
+  - Note (14 Oct 2026): passed in Chrome at phone size against the live address: Welcome, Set-up, the Ladder, Breathe with Start, a step with +1, Log an attempt, Add a step, Settings and Set a new goal, with no security-policy messages and no errors; Chrome also found the manifest valid and the app installable. Still to do on the phones themselves, Safari above all.
 - [ ] Push a small change: the phone shows it on the next visit, without clearing anything.
 
 **Break it on purpose** (the course's stress test):
