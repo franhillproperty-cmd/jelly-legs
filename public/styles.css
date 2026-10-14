@@ -481,7 +481,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
 
 /* Less motion: the jelly sits still with no control, and there's no confetti. */
 @media (prefers-reduced-motion: reduce) {
-  .breath-control { display: none; }
+  .button.breath-control { display: none; } /* as specific as .button.small, and later */
   .confetti { display: none; }
 }
 

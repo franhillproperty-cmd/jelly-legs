@@ -1,0 +1,3 @@
+# The icon SVG is compared byte for byte with what scripts/make-icons.mjs makes, so its
+# line ending must not change on checkout.
+*.svg text eol=lf

@@ -813,3 +813,7 @@ The jelly stood on the rung for settled steps out of all steps, so a person whos
 **151. The quip "On the stage, legs like concrete."** (Q150)
 Under answer 150 it could only show once the goal step has settled, and then the ladder is complete and "Jelly legs are optional now." shows instead.
 **Answer:** Delete it. It can never show, because the complete quip always wins, and dead text in strings.js will confuse the wording review later. Remove it from QUIPS and any test that mentions it.
+
+**152. Railway's deployment config.** (L134, stage 3)
+Railway has stopped reading `railway.json` / `railway.toml` for new services (deprecated, cut-off 1 December 2026). Their replacement, `.railway/railway.ts`, needs the `railway` npm package and a separate apply step.
+*Builder's call (stage 3):* no Railway config file. `railpack.json` (Railway's builder) runs `node server.js`, package.json pins Node 24, and README.md has the few dashboard settings as a checklist for Fran. Listed in GAPS.md.
