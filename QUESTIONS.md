@@ -809,3 +809,7 @@ The jelly stood on the rung for settled steps out of all steps, so a person whos
 
 **150. Pauses in the breathing, and the quips.** (L85, Q147)
 **Answer:** Breathe: add a pause at the top of the second in-breath (about one second) and a pause at the bottom after the out-breath (about two seconds), with the jelly holding still in each. Make all four phase lengths constants in one place and list them in GAPS.md. Keep the seven quips but make sure none of them says the person is on the stage unless the goal step is settled.
+
+**151. The quip "On the stage, legs like concrete."** (Q150)
+Under answer 150 it could only show once the goal step has settled, and then the ladder is complete and "Jelly legs are optional now." shows instead.
+**Answer:** Delete it. It can never show, because the complete quip always wins, and dead text in strings.js will confuse the wording review later. Remove it from QUIPS and any test that mentions it.

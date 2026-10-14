@@ -290,13 +290,47 @@ describe('While the ladder is complete, the too-big notice, the friends line and
     assert.equal(R.notices(w.data).findSomewhere, true);
   });
 
-  it('a no to a stranger step never gets keep-going', () => {
+  it('a no to a stranger step never gets keep-going: the friends line is off', () => {
     const { w } = complete();
     const stranger = { people: 2, toggles: [], words: 50, feelsEasy: false };
-    const p = w.prepare(stranger);
-    assert.deepEqual(p.advice, { kind: 'switchOff', key: 'knowEveryone' });
-    assert.notEqual(R.planningAdvice(w.data, p.step).kind, 'keepGoing');
+    assert.notEqual(R.planningAdvice(w.data, w.prepare(stranger).step).kind, 'keepGoing');
     assert.deepEqual(R.prepareStep(unmarked(w.data), draft(stranger), { now: w.now() }).advice, { kind: 'keepGoing' });
+  });
+
+  it('a no to the silly-easy question saves the step as rehearsing, with no make-it-smaller advice (BUGS.md 7)', () => {
+    const { w } = complete();
+    const no = { words: 100, feelsEasy: false };
+    const p = w.prepare(no);
+    assert.deepEqual([p.step.state, p.advice, p.step.feelsEasy], ['rehearsing', null, false]);
+    // The same step on a ladder that isn't complete is planning, with the advice.
+    const notComplete = R.prepareStep(unmarked(w.data), draft(no), { now: w.now() });
+    assert.equal(notComplete.step.state, 'planning');
+    assert.notEqual(notComplete.advice, null);
+    // Saved, it can be rehearsed and logged like any other step.
+    w.data = R.commitStep(w.data, p);
+    const saved = w.step(p.step.id);
+    assert.ok(R.allowedActions(saved).includes('runThrough'));
+    assert.ok(R.allowedActions(saved).includes('logAttempt'));
+    assert.equal(w.log(saved, { stayed: true, hardToStay: 1 }).ok, true);
+  });
+
+  it('a no on a resized edit is rehearsing too', () => {
+    const { w } = complete();
+    const other = w.add({ words: 25, people: 1 });
+    const p = R.prepareStep(w.data, { ...w.step(other.id), words: 50, feelsEasy: false }, { now: w.now(), editingId: other.id });
+    assert.deepEqual([p.step.state, p.advice], ['rehearsing', null]);
+  });
+
+  it('a step left planning from before the ladder was complete is rehearsing once saved again', () => {
+    const w = world();
+    const planning = w.add({ words: 25, feelsEasy: false });
+    assert.equal(planning.state, 'planning');
+    const goal = w.add({ words: 25, goal: true });
+    w.log(goal, { stayed: true, hardToStay: 1 });
+    assert.equal(R.ladderComplete(w.data), true);
+    const p = w.edit(planning, { title: 'Two lines, again' });
+    assert.equal(p.step.state, 'rehearsing');
+    assert.equal(p.advice, null);
   });
 
   it('no one-thing warning while complete; the same change warns when it isn\'t', () => {

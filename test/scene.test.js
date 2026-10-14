@@ -110,8 +110,9 @@ describe('A complete ladder: the jelly at the lectern', () => {
 describe('The quip, chosen by the jelly\'s height', () => {
   const quip = (states, goalAt = -1, dials = [], attempts = []) => QUIPS[sceneState(withGoal(states, goalAt, attempts, dials)).quip];
 
-  it('all seven quips and the complete one have their words', () => {
-    for (const key of ['complete', 'none', 'firstStep', 'didntStay', 'quarter', 'halfway', 'nearly', 'top']) assert.ok(QUIPS[key], key);
+  it('every quip the scene can choose has its words, and there are no others', () => {
+    assert.deepEqual(Object.keys(QUIPS).sort(), ['complete', 'didntStay', 'firstStep', 'halfway', 'nearly', 'none', 'quarter']);
+    for (const key of Object.keys(QUIPS)) assert.ok(QUIPS[key], key);
   });
 
   it('no steps; low down; a quarter; halfway; three quarters of the way to the goal', () => {

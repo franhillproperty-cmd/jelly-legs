@@ -246,7 +246,6 @@ export const QUIPS = {
   quarter: 'Wobbling, climbing, still here.',
   halfway: 'Halfway up and the knees have mostly stopped knocking.',
   nearly: 'Nearly there. The lectern\'s looking smaller.',
-  top: 'On the stage, legs like concrete.',
 };
 
 // The example ladder (Q95): every row changes one thing from the row above.

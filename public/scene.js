@@ -68,9 +68,7 @@ export function sceneState(data) {
 }
 
 // Which quip, by the jelly's height. The first that applies wins; a complete ladder comes
-// first. None says the jelly is on the stage unless the goal step has settled (Q150), so
-// "On the stage" (`top`) belongs with a complete ladder, where the complete quip takes its
-// place; it is kept, but doesn't show.
+// first. None says the jelly is on the stage unless the goal step has settled (Q150).
 function quipFor({ total, position, complete, lastAttempt }) {
   if (complete) return 'complete';
   if (total === 0) return 'none';

@@ -134,7 +134,7 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 
 ### The quips under the scene (the look stage), for Fran to rewrite
 
-All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order and the heights are the builder's call, except the first: Fran's spec shows it whenever the ladder is complete). "Height" is how far the jelly has come towards the goal step (Q148).
+All seven, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order and the heights are the builder's call, except the first: Fran's spec shows it whenever the ladder is complete). "Height" is how far the jelly has come towards the goal step (Q148).
 
 1. The ladder is complete, its goal step settled (Q138): "Jelly legs are optional now." Fran's words.
 2. No steps yet: "Jelly legs, at the bottom, looking up."
@@ -144,7 +144,7 @@ All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in
 6. A quarter of the way or more: "Wobbling, climbing, still here."
 7. Otherwise, steps on the ladder but under a quarter of the way: "One foot on the ladder. That counts."
 
-"On the stage, legs like concrete." is kept but no longer shows. Fran asked that no quip puts the person on the stage unless the goal step has settled (Q150), and when it has, the ladder is complete and "Jelly legs are optional now." shows instead. Fran to say whether it should replace that one, show somewhere else, or go.
+"On the stage, legs like concrete." has gone (Q151): it could never show, since when the goal step has settled the complete quip shows instead.
 
 ### The goal step's words (Q149), Fran's, for her to rewrite
 
@@ -212,7 +212,7 @@ The goal step and the complete ladder
 - Completion is worked out fresh each time, like the notices (Q27). Deleting the attempt that settled the goal step, editing its dials (it goes back to rehearsing or planning), switching the mark off, or moving the mark to a step that isn't settled all undo it: Suggest a step and the notices come back. Settling the goal step again shows the message again.
 - Marking a step that is already settled completes the ladder straight away, with no message: the message only follows an attempt that settles the goal step.
 - While the ladder is complete, Add a step still adds to the same ladder, and it stays complete unless the new step is saved with "My goal" on: that moves the mark to a step that isn't settled yet, so the ladder is no longer complete (see above). Logging goes on as normal; a later attempt on the goal step gets the usual reply and no message.
-- With the friends line off, a no to a stranger step gets the make-it-smaller message, never the keep-going one (Q31). The find-somewhere line, the early-steps caution, make-it-smaller, the replies, the rehearsal counter and the plus two are unchanged.
+- Nothing is saved as planning while the ladder is complete: a "no" to the silly-easy question saves the step as rehearsing, with no make-it-smaller message (BUGS.md 7), and a step left planning from before is rehearsing once saved again. The find-somewhere line, the early-steps caution, the replies (and their smaller-step line after a didn't stay), the rehearsal counter and the plus two are unchanged.
 - For the one-thing check, "while complete" means as the ladder stands before the save. So editing the goal step's dials on a complete ladder isn't checked, even though that save undoes the completion.
 - The message sits under the reply and any smaller-step line, above OK. The confetti fires because the step has settled.
 - The hint on Log an attempt sits between "How hard was it to stay?" and the 0 to 10 buttons, and a screen reader reads it with the question, also when the "Needed" error shows. The end labels (Q94) are unchanged.

@@ -592,7 +592,9 @@ export function planningAdvice(data, step) {
 // Everything that happens on Save, worked out but not yet stored (L98). The screen shows
 // the one-thing dialog, then the early-steps caution, then the planning advice, and calls
 // commitStep if the person goes ahead. While the ladder is complete, as it stands before
-// this save, there is no one-thing check.
+// this save, there is no one-thing check, and nothing is saved as planning: a "no" to the
+// silly-easy question saves the step as rehearsing like any other, with no make-it-smaller
+// advice, since the person is no longer climbing (BUGS.md 7).
 export function prepareStep(data, draft, { editingId = null, now }) {
   const existing = editingId ? data.steps.find(s => s.id === editingId) : null;
   if (editingId && !existing) throw new Error(`No step ${editingId}`);
@@ -621,11 +623,13 @@ export function prepareStep(data, draft, { editingId = null, now }) {
   } else {
     saved = { ...existing, ...step, suggested: existing.suggested, state: existing.state };
   }
+  const complete = ladderComplete(data);
+  if (complete && saved.state === 'planning') saved.state = 'rehearsing';
   // A rehearsing step at or past its target is ready; raising the target never takes ready away (Q42).
   if (saved.state === 'rehearsing' && saved.rehearsalCount >= saved.rehearsalTarget) saved.state = 'ready';
 
   const stepsAfter = existing ? data.steps.map(s => (s.id === saved.id ? saved : s)) : [...data.steps, saved];
-  const checked = resized && !ladderComplete(data);
+  const checked = resized && !complete;
   return {
     ok: true,
     step: saved,

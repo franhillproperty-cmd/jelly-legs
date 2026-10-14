@@ -2,6 +2,15 @@
 
 Every bug found while testing, newest first: what happened, why, what changed, and how to check it stays fixed.
 
+## 7. A complete ladder: a step saved with a "no" couldn't be rehearsed or logged
+
+- **Found:** 14 Oct 2026, by Fran, reviewing.
+- **What happened:** Once the ladder was complete, a step saved with "No" to "Is this step so small it's almost silly to count it?" still went into planning, with the make-it-smaller message, and a planning step can't be rehearsed or logged. That contradicts the completion message: "Keep logging if you like, but you're not climbing any more."
+- **Why:** Saving as planning, and its advice, came from the climbing rules, and completion (Q138) switched off only the one-thing check, the too-big notice and the friends line.
+- **Fix:** While the ladder is complete, nothing is saved as planning: a step saved with a "no" is rehearsing, like any other, with no make-it-smaller message. That includes a resized edit, and a step left planning from before the ladder was complete once it is saved again. The silly-easy answer is still stored as given. The other completion rules are unchanged. When the ladder stops being complete (the settling attempt deleted, the mark moved), saving works as before.
+- **Commit:** "Fix: a step saved with a no on a complete ladder is rehearsing; the stage quip deleted".
+- **Check:** the hand test "Completing a ladder" in TESTING.md (its new last sentence), and the unit tests 'a no to the silly-easy question saves the step as rehearsing, with no make-it-smaller advice (BUGS.md 7)' and the two after it in test/complete.test.js.
+
 ## 6. Step screen: "Undo that +1" and "Mark ready now" ran together
 
 - **Found:** 14 Oct 2026, by Fran, reviewing.
