@@ -223,6 +223,11 @@ export const LADDER = {
   empty: 'Your ladder starts here. Add a step, or let the app suggest one. This is the shape a ladder can take:', // Q75
   addStep: 'Add a step',
   oneAtATime: 'One step at a time: rehearse it, do it, log it, then add the next one.', // Q146
+  // The goal step, under the goal line, and the question when the third step is added
+  // with none marked (Q149).
+  goalStepNone: 'Goal step: not added yet. Add it when you can see the way there.',
+  goalStepIs: title => `Goal step: ${title}`,
+  goalStepAsk: 'Which step is the one you\'re aiming at? Tick My goal on it, and the ladder knows where the top is.',
   // Add a step while a step is already planning, rehearsing or ready (Q146).
   onTheGo: title => `You've already got a step on the go: ${title}. The ladder works one step at a time. Finish that one first?`,
   goToStep: 'Go to that step',

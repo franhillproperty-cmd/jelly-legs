@@ -717,3 +717,60 @@ describe('Version 2 data, and version 1 upgraded', () => {
     }
   });
 });
+
+// ================================================================ asking for the goal step
+
+describe('The third step with no goal step asks once which is the goal (Q149)', () => {
+  // Add a step as the form does, and say whether the question is due.
+  const addAsking = (w, over = {}) => {
+    const before = w.data;
+    w.add(over);
+    return R.goalStepAskDue(before, w.data);
+  };
+
+  it('asked on the third step, not the second or the fourth', () => {
+    const w = world();
+    assert.equal(addAsking(w), false);
+    assert.equal(addAsking(w), false);
+    assert.equal(addAsking(w), true);
+    assert.equal(addAsking(w), false);
+  });
+
+  it('not when the third step is the goal step, or a goal step is already marked', () => {
+    const first = world();
+    addAsking(first);
+    addAsking(first);
+    assert.equal(addAsking(first, { goal: true }), false);
+    const second = world();
+    addAsking(second, { goal: true });
+    addAsking(second);
+    assert.equal(addAsking(second), false);
+  });
+
+  it('once per ladder: not again after a step is deleted and added back; again on a new ladder', () => {
+    const w = world();
+    addAsking(w);
+    addAsking(w);
+    assert.equal(addAsking(w), true);
+    w.data = R.markGoalAskShown(w.data);
+    w.data = R.deleteStep(w.data, w.data.steps.at(-1).id);
+    assert.equal(addAsking(w), false);
+    // Complete it, start a new ladder, and the question can come again.
+    const goal = w.add({ goal: true });
+    w.log(goal, { stayed: true, hardToStay: 1 });
+    w.newLadder({ situationId: 'toast' });
+    assert.equal(Object.hasOwn(w.data.person, 'goalAskShown'), false);
+    addAsking(w);
+    addAsking(w);
+    assert.equal(addAsking(w), true);
+  });
+
+  it('the mark reads back, is optional, and must be yes or no', () => {
+    const w = world();
+    const asked = R.markGoalAskShown(w.data);
+    assert.equal(R.readFile(R.serialise(asked, at(1))).ok, true);
+    assert.equal(R.readFile(R.serialise(w.data, at(1))).ok, true);
+    const wrong = { ...w.data, person: { ...w.data.person, goalAskShown: 'yes' } };
+    assert.deepEqual(R.readFile(R.serialise(wrong, at(1))), { ok: false, reason: 'invalid', problem: 'person.flags' });
+  });
+});

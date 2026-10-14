@@ -454,19 +454,12 @@ textarea.input { min-height: 7rem; resize: vertical; }
 
 /* ---------------------------------------------------------------- the look: breathing with the jelly */
 
-/* The jelly, glowing, swells twice (the breath in, then the short sip), then settles over
-   about six seconds, its feet staying where they are. */
+/* The jelly, glowing, swells twice (the breath in, then the short sip), holds, settles
+   back, and holds, its feet staying where they are. breathe.js runs the round from BREATH
+   in rules.js; at rest the jelly is at its smallest (BREATH_SCALE.rest). */
 .breath { display: grid; place-items: center; height: 13rem; margin: 1rem 0 0.5rem; }
 .breath-jelly { width: 10rem; height: 10rem; transform: scale(0.6); transform-origin: 50% 100%; }
 .breath-jelly .jelly { width: 100%; height: 100%; filter: drop-shadow(0 0 0.9rem var(--orange)); }
-.breath.is-going .breath-jelly { animation: breathe 9s infinite; }
-@keyframes breathe {
-  0% { transform: scale(0.6); animation-timing-function: ease-out; }
-  22% { transform: scale(0.84); animation-timing-function: linear; }   /* the breath in, 2 seconds */
-  27% { transform: scale(0.84); animation-timing-function: ease-out; } /* a moment */
-  35% { transform: scale(1); animation-timing-function: ease-in-out; } /* the sip that fills right up */
-  100% { transform: scale(0.6); }                                      /* out, slowly, about six seconds */
-}
 .breath-row { display: flex; justify-content: center; }
 
 /* ---------------------------------------------------------------- the look: confetti */
@@ -488,7 +481,6 @@ textarea.input { min-height: 7rem; resize: vertical; }
 
 /* Less motion: the jelly sits still with no control, and there's no confetti. */
 @media (prefers-reduced-motion: reduce) {
-  .breath.is-going .breath-jelly { animation: none; }
   .breath-control { display: none; }
   .confetti { display: none; }
 }
@@ -712,5 +704,6 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .stages [aria-current] > span { padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--orange); color: var(--on-orange); }
 .stage-line { margin: 0 0 1rem; }
 
-/* The Ladder: one step at a time, under the goal. */
+/* The Ladder: the goal step under the goal, and one step at a time under the progress line. */
+.goal-step { font-weight: 600; margin-bottom: 0.25rem; }
 .one-at-a-time { color: var(--muted); }

@@ -134,16 +134,21 @@ Nothing in PLAN.md or the answers gives words for these, so they show as bracket
 
 ### The quips under the scene (the look stage), for Fran to rewrite
 
-All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order is the builder's call, except the first: Fran's spec shows it whenever the ladder is complete):
+All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in this order (the order and the heights are the builder's call, except the first: Fran's spec shows it whenever the ladder is complete). "Height" is how far the jelly has come towards the goal step (Q148).
 
 1. The ladder is complete, its goal step settled (Q138): "Jelly legs are optional now." Fran's words.
 2. No steps yet: "Jelly legs, at the bottom, looking up."
-3. Every step settled: "On the stage, legs like concrete."
-4. The most recently logged attempt on this ladder was a didn't stay: "Came back down. The ladder's still here." It stays until the next attempt is logged.
-5. All but one step settled (with at least two steps): "Nearly there. The lectern's looking smaller."
-6. Half or more settled: "Halfway up and the knees have mostly stopped knocking."
-7. A quarter or more settled: "Wobbling, climbing, still here."
-8. Otherwise, steps on the ladder but under a quarter settled: "One foot on the ladder. That counts."
+3. The most recently logged attempt on this ladder was a didn't stay: "Came back down. The ladder's still here." It stays until the next attempt is logged.
+4. Three quarters of the way or more: "Nearly there. The lectern's looking smaller." (Only with a goal step marked: without one the jelly stops at halfway.)
+5. Halfway or more: "Halfway up and the knees have mostly stopped knocking."
+6. A quarter of the way or more: "Wobbling, climbing, still here."
+7. Otherwise, steps on the ladder but under a quarter of the way: "One foot on the ladder. That counts."
+
+"On the stage, legs like concrete." is kept but no longer shows. Fran asked that no quip puts the person on the stage unless the goal step has settled (Q150), and when it has, the ladder is complete and "Jelly legs are optional now." shows instead. Fran to say whether it should replace that one, show somewhere else, or go.
+
+### The goal step's words (Q149), Fran's, for her to rewrite
+
+"Goal step: not added yet. Add it when you can see the way there." and "Goal step: [title]" under the goal line (`LADDER.goalStepNone`, `.goalStepIs`); and, once, after the third step with none marked: "Which step is the one you're aiming at? Tick My goal on it, and the ladder knows where the top is." (`LADDER.goalStepAsk`).
 
 ### The Step screen's lines and the one-step-at-a-time words (Q145, Q146), for Fran to rewrite
 
@@ -176,12 +181,12 @@ Also new, all Fran's words: the strip's stages, "Plan", "Rehearse", "Ready", "Do
 ### The look stage
 
 - The scene sits under the Ladder heading and above the goal, with the quip under it. It is decoration, hidden from screen readers; the quip is ordinary text and is read.
-- The ladder in the drawing always has nine rungs, whatever the number of steps. The jelly stands on the rung nearest to settled steps out of all steps, so a quarter, a half and three quarters each land on a rung. With every step settled it is on the stage beside the lectern, facing the audience, with a bigger smile. With no steps it is on the bottom rung.
-- The jelly moves only when the Ladder is drawn: coming back after a step settles, it climbs from where it was last shown, in about a second. Adding a step can move it down a rung, since the share settled falls. The first time the app opens it is simply in place.
+- The ladder in the drawing always has nine rungs, whatever the number of steps. The jelly stands on the rung nearest to how far it has come towards the goal step (Q148), so a quarter, a half and three quarters each land on a rung. It is on the stage beside the lectern, facing the audience, with a bigger smile, only once the goal step has settled. With no steps it is on the bottom rung.
+- The jelly moves only when the Ladder is drawn: coming back after a step settles, it climbs from where it was last shown, in about a second. Adding a step can move it down a rung when no goal step is marked, since the share settled falls; marking or moving the goal step can move it either way. The first time the app opens it is simply in place.
 - The wobble follows the most recent attempt where the person stayed, by when it was logged: full at a rating of 10, falling evenly to none at 2 (the easy line) and below. Before any stay, the legs wobble fully.
 - The audience's heads, faces and eyes turn to where the jelly is.
 - The scene uses the one orange for the jelly only; the curtain and the stage's edge are the blue-grey (#4F6F8F), with lighter and darker blue-greys and warm greys for the rest. In dark mode the scene's colours are darkened to match.
-- The Breathe circle sits under the exercise text and above the seven days. It swells over about two seconds (the breath in), pauses briefly, swells to full over about a second (the sip), then sinks over about six seconds: nine seconds a round. Start and Stop are the words from L80's rehearsal timer; the button reads Start until pressed. Once started it stays on if the person goes to another screen and comes back (starting again from the breath in), and is off again when the app is next opened. With less motion asked for, the circle sits still at its smallest and there is no button.
+- The breathing jelly (it was a circle until Q147) sits under the exercise text and above the seven days. Its round is set by `BREATH` in public/rules.js (Q150), the one place to change it: the breath in, 2 seconds; the sip that fills right up, 1 second; a pause at the top, 1 second; the long breath out, 6 seconds; a pause at the bottom, 2 seconds: 12 seconds a round. The jelly holds still through both pauses. Fran asked for four phase lengths; the in-breath has two parts, the breath and the sip, so there are five numbers. The short catch between the breath in and the sip, about half a second before, is gone: the sip now follows straight on. Start and Stop are the words from L80's rehearsal timer; the button reads Start until pressed. Once started it stays on if the person goes to another screen and comes back (starting again from the breath in), and is off again when the app is next opened. With less motion asked for, the circle sits still at its smallest and there is no button.
 - Confetti: 48 pieces, alternately the orange and the blue-grey, burst from the middle of the screen for one second, once, on the reply that follows the attempt where a step settles. None when less motion is asked for.
 
 ### Ladder complete and new goals
@@ -211,7 +216,7 @@ The goal step and the complete ladder
 - For the one-thing check, "while complete" means as the ladder stands before the save. So editing the goal step's dials on a complete ladder isn't checked, even though that save undoes the completion.
 - The message sits under the reply and any smaller-step line, above OK. The confetti fires because the step has settled.
 - The hint on Log an attempt sits between "How hard was it to stay?" and the 0 to 10 buttons, and a screen reader reads it with the question, also when the "Needed" error shows. The end labels (Q94) are unchanged.
-- The scene: while the ladder is complete the jelly stands at the lectern, even if other steps aren't settled, and the complete quip comes before every other.
+- The scene: the jelly stands at the lectern only while the ladder is complete (Q148), even if other steps aren't settled, and the complete quip comes before every other.
 
 Set a new goal and the earlier ladders
 - Set a new goal opens a full-screen panel, like Suggest: Set-up's goal question as its heading, every situation in one column with none picked, then "Or type your own" with its rating under it once the box has text, and one Save. Set-up's hint, "Pick one of the situations above, or type your own.", isn't shown, since it points "above".
@@ -237,6 +242,14 @@ Set a new goal and the earlier ladders
 - The replies don't follow the person's real place on their ladder. After an easy stay (reply four) the jelly climbs from the fourth rung to the fifth, one leg lifted and leaning up the ladder, then stands there. After a hard stay (replies two and three) it sits on the fourth rung, legs hanging, not wobbling. After a didn't stay (reply one) it stands on the floor at the foot of the ladder, looking up, smiling, legs wobbling a little. The reply that completes a ladder is an easy stay, so the jelly climbs; it isn't shown at the lectern there.
 - On Breathe the jelly glows and grows from its feet, so it swells upwards and settles back down; its legs don't wobble. Start and Stop work as before.
 - With less motion asked for, no jelly moves anywhere: the Welcome jelly and the step jelly stand still, the reply jelly is already in its place, and the Breathe jelly sits at its smallest with no Start button.
+
+### The jelly's height and the goal step (Q148, Q149)
+
+- How far a step has come towards the goal step: on each of the four dials, the notches it is up from the floor (10 words, nobody, can't see them, matters not much), counted no further than the goal step's own, added up, out of the goal step's total. Words and people between two notches count part of the way. Each step turns one dial up one notch, so each settled step lifts the jelly by about the same amount. The jelly's height is the settled step that has come furthest; open steps don't count.
+- With no step marked My goal, the jelly climbs the bottom half only: settled steps out of all steps, times a half. The stage stays empty.
+- A settled step that matches or passes the goal step on every dial puts the jelly on the top rung, still on the ladder; the stage waits for the goal step itself.
+- "Goal step: [title]" or "Goal step: not added yet. ..." sits directly under the goal line, above the progress line, in bold. It names the marked step on this ladder only, so a new ladder starts with "not added yet".
+- The question about the goal step comes after saving the ladder's third step when no step is marked My goal, as a message with OK over the Ladder (after the make-it-smaller message, if there is one). Once per ladder: it isn't asked again on that ladder, even if steps are deleted and added back, and a new ladder can ask again. The person's data remembers that it was asked (a yes-or-no that older data simply doesn't have).
 
 ## 4. Not built yet
 

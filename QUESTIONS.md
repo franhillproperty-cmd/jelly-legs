@@ -799,3 +799,13 @@ Nothing on the Ladder said that the ladder is climbed one step at a time, and Ad
 
 **147. The jelly beyond the Ladder.**
 **Answer:** The jelly appears on the Welcome screen, large, at the bottom of the ladder; the Breathe screen's circle becomes the jelly, swelling and settling with the breath; the Step screen shows the jelly small beside the progress strip, wobbling in rehearsing and still once settled; the reply screens after an attempt show the jelly in a state matching the reply (climbing for settled, sitting on a rung for hard, at the foot of the ladder for didn't stay, no sad face). All original, inline SVG, reduced-motion respected.
+
+**148. What the jelly's height measures.** (Q138, Q147)
+The jelly stood on the rung for settled steps out of all steps, so a person whose steps were all settled reached the stage whether or not they were near their goal.
+**Answer:** The jelly's height on the ladder measures progress towards the goal, not the fraction of steps settled. Progress is the settled step nearest the goal on the four dials, compared with the goal's own dials; with no step marked My goal, the jelly can rise no higher than halfway and the stage stays empty. The jelly reaches the lectern only when the step marked My goal settles, which is the completion rule already.
+
+**149. Making the goal step visible and expected.** (Q139)
+**Answer:** On the Ladder, under the goal line, show 'Goal step: not added yet. Add it when you can see the way there.' until a step is marked My goal, then 'Goal step: [title]'. When the person adds their third step without a goal step existing, say once: 'Which step is the one you're aiming at? Tick My goal on it, and the ladder knows where the top is.'
+
+**150. Pauses in the breathing, and the quips.** (L85, Q147)
+**Answer:** Breathe: add a pause at the top of the second in-breath (about one second) and a pause at the bottom after the out-breath (about two seconds), with the jelly holding still in each. Make all four phase lengths constants in one place and list them in GAPS.md. Keep the seven quips but make sure none of them says the person is on the stage unless the goal step is settled.

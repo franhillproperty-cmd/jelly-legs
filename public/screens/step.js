@@ -246,16 +246,22 @@ export function stepFormScreen(app, { id, query }) {
       });
     }
     app.setDirty(false);
-    if (!app.save(R.commitStep(app.data(), prepared))) {
+    // The ladder's third step with no goal step asks, once, which step is the goal (Q149).
+    const before = app.data();
+    let next = R.commitStep(before, prepared);
+    const askGoal = R.goalStepAskDue(before, next);
+    if (askGoal) next = R.markGoalAskShown(next);
+    if (!app.save(next)) {
       app.setDirty(true);
       return;
     }
     delete app.flash.prefill;
     delete app.flash.lastPress;
     // Then the Ladder; a "no" saves it as planning, with the make-it-smaller message shown
-    // over the Ladder (L98, Q31, Q75).
+    // over the Ladder (L98, Q31, Q75), and then the goal-step question.
     await app.go('ladder', { replace: true });
-    if (prepared.advice) planningMessage(prepared.advice, prepared.step);
+    if (prepared.advice) await planningMessage(prepared.advice, prepared.step);
+    if (askGoal) await tell(LADDER.goalStepAsk);
   };
 
   return {

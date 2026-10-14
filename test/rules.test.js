@@ -1466,3 +1466,25 @@ describe('Set-up and the goal (L81, Q52, Q59)', () => {
     assert.throws(() => R.setGoal(person, 'something new'));
   });
 });
+
+describe('The breathing jelly\'s round (Q150)', () => {
+  const seconds = round => round.stops.map(s => Math.round(s.offset * round.seconds * 100) / 100);
+
+  it('the five timings, in seconds, in one place', () => {
+    assert.deepEqual(R.BREATH, { in: 2, sip: 1, pauseTop: 1, out: 6, pauseBottom: 2 });
+  });
+
+  it('swells on the breath in and the sip, holds still at the top, settles over the breath out, holds still at the bottom', () => {
+    const round = R.breathRound();
+    assert.equal(round.seconds, 12);
+    assert.deepEqual(seconds(round), [0, 2, 3, 4, 10, 12]);
+    assert.deepEqual(round.stops.map(s => s.scale), [0.6, 0.84, 1, 1, 0.6, 0.6]);
+    // Still in both pauses: the size is the same at both ends of each.
+    assert.equal(round.stops[2].scale, round.stops[3].scale);
+    assert.equal(round.stops[4].scale, round.stops[5].scale);
+  });
+
+  it('follows whatever timings it is given', () => {
+    assert.deepEqual(seconds(R.breathRound({ in: 3, sip: 1, pauseTop: 2, out: 5, pauseBottom: 1 })), [0, 3, 4, 6, 11, 12]);
+  });
+});

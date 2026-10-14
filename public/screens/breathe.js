@@ -45,23 +45,35 @@ export function breatheScreen(app) {
     if (app.save({ ...app.data(), breathing })) app.say(encouragementText(R.breathingCount(breathing, day)));
   };
 
-  // The jelly, glowing, to breathe with (Q147): it swells twice (the breath in, then the
-  // short sip to fill right up), settles slowly for about six seconds (the long breath out), and
-  // repeats while it's going. Still, with no control, when the phone asks for less motion.
-  const going = app.flash.breathCircle === true;
-  const circle = h('div', { class: `breath ${going ? 'is-going' : ''}`, 'aria-hidden': 'true' }, h('div', { class: 'breath-jelly' }, createJelly()));
+  // The jelly, glowing, to breathe with (Q147, Q150): it swells twice (the breath in, then
+  // the short sip to fill right up), holds, settles slowly (the long breath out), holds, and
+  // repeats while it's going. The timings are BREATH in rules.js. Still, with no control,
+  // when the phone asks for less motion.
+  let going = app.flash.breathCircle === true;
+  const jelly = h('div', { class: 'breath-jelly' }, createJelly());
+  const circle = h('div', { class: 'breath', 'aria-hidden': 'true' }, jelly);
+  let round = null;
+  const breathe = () => {
+    round?.cancel();
+    round = null;
+    if (!going || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const { seconds, stops } = R.breathRound();
+    round = jelly.animate(stops.map(s => ({ offset: s.offset, transform: `scale(${s.scale})`, easing: s.easing })),
+      { duration: seconds * 1000, iterations: Infinity });
+  };
   const control = button(going ? BREATHE.stop : BREATHE.start, () => {
-    const on = !circle.classList.contains('is-going');
-    circle.classList.toggle('is-going', on);
-    app.flash.breathCircle = on;
-    control.textContent = on ? BREATHE.stop : BREATHE.start;
-    control.setAttribute('aria-pressed', String(on));
+    going = !going;
+    app.flash.breathCircle = going;
+    control.textContent = going ? BREATHE.stop : BREATHE.start;
+    control.setAttribute('aria-pressed', String(going));
+    breathe();
   }, { small: true });
   control.setAttribute('aria-pressed', String(going));
   control.classList.add('breath-control');
 
   return {
     tabs: 'breathe',
+    after: breathe,
     node: h('div', { class: 'breathe' },
       h('h1', {}, BREATHE.heading),
       banner ? notice(SETUP.savedBanner) : null,

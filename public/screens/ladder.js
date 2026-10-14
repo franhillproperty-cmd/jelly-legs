@@ -46,6 +46,7 @@ export function ladderScreen(app) {
       scene.element,
       h('p', { class: 'quip' }, QUIPS[state.quip]),
       goalLine,
+      goalStepLine(data.steps),
       h('p', { class: 'progress' }, progressText(person)),
       h('p', { class: 'one-at-a-time' }, LADDER.oneAtATime), // always shown (Q146)
       R.checkInDue(person, today()) ? checkIn(app) : null,
@@ -88,6 +89,12 @@ async function addStep(app) {
     if (choice !== 'add') return false;
   }
   return app.go('add');
+}
+
+// The goal step, named under the goal line, or a nudge to add one (Q149).
+function goalStepLine(steps) {
+  const marked = R.goalStep(steps);
+  return h('p', { class: 'goal-step' }, marked ? LADDER.goalStepIs(marked.title) : LADDER.goalStepNone);
 }
 
 // A row on the ladder, or on an earlier one, which always has the quiet look.

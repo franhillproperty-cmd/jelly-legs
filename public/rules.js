@@ -26,6 +26,10 @@ export const ROPE_FOR_HIGH_STRANGERS = 3;
 export const HIGH_STRANGERS = 7;            // a Set-up strangers rating this high lengthens the rope (L43)
 export const CLARIFY_FROM = 9;              // a Set-up rating this high asks the clarifying question (L43)
 export const UNDO_SECONDS = 60;             // how long "undo that +1" is offered (Q24)
+// One round of the breathing jelly, in seconds (L85, Q150): the breath in, the short sip
+// that fills right up, a pause at the top, the long breath out, and a pause at the bottom.
+// The jelly holds still through both pauses.
+export const BREATH = Object.freeze({ in: 2, sip: 1, pauseTop: 1, out: 6, pauseBottom: 2 });
 
 export const FRIENDS_AND_FAMILY = 'Friends and family for now'; // the Set-up button's exact text (L78, Q28)
 export const FLOOR_WHERE = 'At home with the door shut';         // where the floor step happens (L47)
@@ -393,6 +397,19 @@ export function goalStep(steps) {
 // off undoes it.
 export function ladderComplete(data) {
   return !!data.person && goalStep(data.steps)?.state === 'settled';
+}
+
+// Saving the ladder's third step with no step marked My goal asks once which step is the one
+// the person is aiming at (Q149). Once per ladder: `goalAskShown` on the person says it has
+// been asked, and a new ladder clears it. `before` and `after` are the data either side of
+// the save.
+export function goalStepAskDue(before, after) {
+  return !!after.person && !after.person.goalAskShown && !goalStep(after.steps)
+    && before.steps.length === 2 && after.steps.length === 3;
+}
+
+export function markGoalAskShown(data) {
+  return { ...data, person: { ...data.person, goalAskShown: true } };
 }
 
 // ---------------------------------------------------------------- early steps
@@ -1004,6 +1021,9 @@ export function startNewLadder(data, choice, { now, today }) {
     if (!result.ok) return result;
     person = result.person;
   }
+  // The new ladder may be asked for its goal step again (Q149).
+  const { goalAskShown, ...fresh } = person;
+  person = fresh;
   return {
     ok: true,
     data: {
@@ -1040,6 +1060,28 @@ export function lastSevenDays(breathing, today) {
 
 export function breathingCount(breathing, today) {
   return lastSevenDays(breathing, today).filter(d => d.ticked).length;
+}
+
+// The breathing jelly's size through one round of BREATH (Q150), for the animation: its
+// length in seconds, and stops of { offset (0 to 1 of the round), scale, easing }, each
+// easing running from its stop to the next. It swells a long way on the breath in and the
+// rest of the way on the sip, holds, settles back over the breath out, and holds.
+export const BREATH_SCALE = Object.freeze({ rest: 0.6, breathedIn: 0.84, full: 1 });
+export function breathRound(breath = BREATH) {
+  const seconds = breath.in + breath.sip + breath.pauseTop + breath.out + breath.pauseBottom;
+  let t = 0;
+  const stops = [];
+  const at = (scale, easing, then) => {
+    stops.push({ offset: t / seconds, scale, easing });
+    t += then;
+  };
+  at(BREATH_SCALE.rest, 'ease-out', breath.in);
+  at(BREATH_SCALE.breathedIn, 'ease-out', breath.sip);
+  at(BREATH_SCALE.full, 'linear', breath.pauseTop);
+  at(BREATH_SCALE.full, 'ease-in-out', breath.out);
+  at(BREATH_SCALE.rest, 'linear', breath.pauseBottom);
+  at(BREATH_SCALE.rest, 'linear', 0);
+  return { seconds, stops };
 }
 
 // Which encouragement line to show: none ticked, some, or all seven (L86).
@@ -1104,6 +1146,7 @@ function personProblem(p) {
   if (!ratingSetsOk(p.ratingSets, ids)) return 'person.ratingSets';
   if (p.clarifying !== null && !CLARIFYING_ANSWERS.includes(p.clarifying)) return 'person.clarifying';
   if (!isBool(p.signpostShown) || !isBool(p.welcomeSeen) || !isBool(p.setupDone)) return 'person.flags';
+  if (p.goalAskShown !== undefined && !isBool(p.goalAskShown)) return 'person.flags'; // added later, so optional (Q149)
   return null;
 }
 
