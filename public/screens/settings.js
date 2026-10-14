@@ -3,7 +3,7 @@
 // have a Save; the welcome; export, import and delete everything. Nothing else.
 
 import * as R from '../rules.js';
-import { h, textField, button, ask } from '../ui.js';
+import { h, textField, button, ask, revealFirstError } from '../ui.js';
 import { SETTINGS, SETUP, COMMON } from '../strings.js';
 import { now, today } from '../store.js';
 import { venueField, paceField, goalPicker, exportData, importData } from './parts.js';
@@ -62,7 +62,8 @@ export function settingsScreen(app) {
   const saveGoal = () => {
     const result = R.addOwnGoal(app.data().person, goal.text(), goal.rating(), { now: now(), today: today() });
     if (!result.ok) {
-      goal.showErrors(result.errors)?.scrollIntoView({ block: 'center' });
+      goal.showErrors(result.errors);
+      revealFirstError(goal); // BUGS.md 4
       return;
     }
     if (!app.save({ ...app.data(), person: result.person }, { redraw: false })) return;

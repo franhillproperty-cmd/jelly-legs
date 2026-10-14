@@ -34,8 +34,8 @@ export function timesText(words, pace) {
   return { own: UNITS.atYourPace(f(t.own)), three: UNITS.threePaces(f(t.slow), f(t.average), f(t.quick)) };
 }
 
-// A step row: "25 words, 0:11 · 1 person · clearly · not much" (Q90). A suggestion going
-// from nobody to one person leaves "Can see them" to the person, so it isn't shown (Q8).
+// A step row: "25 words, 0:11 · 1 person · clearly · not much" (Q90). "Can see them" is
+// left out if it hasn't been set.
 export function rowText(step, pace) {
   const parts = [lengthText(step.words, pace), UNITS.person(step.people)];
   if (step.visibility) parts.push(VISIBILITY[step.visibility]);

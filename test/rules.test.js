@@ -852,13 +852,17 @@ describe('Suggest a step from a settled step changes exactly one dial by exactly
     assert.equal(w.add().step.suggested, false);
   });
 
-  it('from nobody to one person switches "I know everyone there" on and leaves "Can see them" to the person (Q8)', () => {
+  it('from nobody to one person switches "I know everyone there" on and presets "Can see them" to clearly (Q8, BUGS.md 5)', () => {
     const w = world();
     w.settle({ people: 0, toggles: [] });
     const s = R.suggestStep(w.data, 'people');
     assert.equal(s.people, 1);
     assert.deepEqual(s.toggles, ['knowEveryone']);
-    assert.equal(s.visibility, null);
+    assert.equal(s.visibility, 'clearly');
+    // Saved as suggested it is valid, and it is one change from the last settled step, not two.
+    const p = R.prepareStep(w.data, { ...R.acceptSuggestion(s), title: 'One friend', whatsDifferent: 'One person' }, { now: w.now() });
+    assert.equal(p.ok, true);
+    assert.deepEqual(p.oneThing.changes.flatMap(c => c.parts.map(part => part.key)), ['people']);
     assert.deepEqual(R.suggestStart(w.data).dials, ['words', 'people', 'matters']);
   });
 

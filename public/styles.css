@@ -183,6 +183,9 @@ fieldset { border: 0; margin: 1.25rem 0; padding: 0; min-width: 0; }
 .hint { color: var(--muted); font-size: 0.95rem; margin: 0.25rem 0 0.5rem; }
 .error { color: var(--error); font-weight: 600; margin: 0.35rem 0 0; }
 .error:empty { display: none; }
+/* After a Save that couldn't go ahead, the first question still needing an answer is
+   marked until it has one (BUGS.md 4). */
+.is-first-error { outline: 3px solid var(--error); outline-offset: 6px; border-radius: var(--radius); scroll-margin-top: 1rem; }
 
 .input {
   display: block;
@@ -260,6 +263,8 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .notice p:last-child, .card p:last-child, .signpost p:last-child { margin-bottom: 0; }
 .signpost { margin: 0.75rem 0; padding: 0.75rem 16px; border: 2px solid var(--orange); }
 .help { margin-top: 0.75rem; color: var(--text); }
+.venue { margin: 1.25rem 0; }
+.venue > .field { margin: 0; } /* the help follows straight on, as part of the same question */
 .places { margin: 0 0 0.75rem; }
 .places li { margin: 0.2rem 0; }
 .card { padding: 16px; margin: 1rem 0; }
@@ -309,6 +314,9 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .rehearsal { margin: 1rem 0; padding: 16px; }
 .why { font-style: italic; }
 .counter { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; }
+/* Undo that +1 and Mark ready now: side by side with a clear gap, or one under the other
+   on a narrow screen (BUGS.md 6). */
+.links { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
 .count { font-weight: 700; margin: 0; }
 .counter .button { width: auto; min-width: min(5rem, 100%); max-width: 100%; font-size: 1.4rem; flex: none; }
 .feels { color: var(--muted); }
@@ -437,6 +445,7 @@ textarea.input { min-height: 7rem; resize: vertical; }
   color: var(--text);
 }
 .panel-content { max-width: 40rem; margin: 0 auto; }
+.panel { scroll-padding-top: calc(var(--tap) + env(safe-area-inset-top)); } /* keeps the Back bar clear (BUGS.md 4) */
 .panel .topbar { margin-bottom: 0.5rem; }
 
 @media (prefers-reduced-motion: no-preference) {

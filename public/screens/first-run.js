@@ -1,7 +1,7 @@
 // Welcome (L74-L76) and Set-up (L77-L83): shown once, the first time the app is opened.
 
 import * as R from '../rules.js';
-import { h, paragraphs, textField, choices, button, link, fill, nextId } from '../ui.js';
+import { h, paragraphs, textField, choices, button, link, fill, nextId, revealFirstError } from '../ui.js';
 import { APP_NAME, TAGLINE, WELCOME, SETUP, SITUATION_TEXT, CLARIFYING, SIGNPOST, COMMON } from '../strings.js';
 import { now, today } from '../store.js';
 import { venueField, paceField, ratingsList, signpost, importData } from './parts.js';
@@ -45,16 +45,30 @@ export function setupScreen(app) {
   });
   const pace = paceField({ pace: draft.pace, onChange: p => { draft.pace = p; touched(); } });
 
-  // Field 4: the situations, the person's own, and the clarifying question under them.
+  // Field 4: the situations, the person's own, and the clarifying question, which sits
+  // directly under the ratings that asked it (L81): under the goal box when a goal typed
+  // there is rated 9 or 10, otherwise under the situations. It can appear away from where
+  // the person is, so its appearing is said aloud too.
   const situations = h('section', { class: 'field' });
   const clarifying = h('div', { class: 'clarifying' });
   const ratingsError = h('p', { class: 'error', role: 'alert' });
   let clarifyingGroup = null;
+  let clarifyingShown = false;
 
   const listed = () => Object.fromEntries(draft.situations.map(s => [s.id, draft.ratings[s.id]]));
+  const placeClarifying = () => {
+    const goalRatings = Object.fromEntries(typedIn('goal').map(s => [s.id, draft.ratings[s.id]]));
+    (R.needsClarifying(goalRatings) ? lists.goal : lists.situations)?.after(clarifying);
+  };
   const drawClarifying = () => {
     clarifyingGroup = null;
-    if (!R.needsClarifying(listed())) return clarifying.replaceChildren();
+    placeClarifying();
+    if (!R.needsClarifying(listed())) {
+      clarifyingShown = false;
+      return clarifying.replaceChildren();
+    }
+    if (!clarifyingShown) app.say(CLARIFYING.question);
+    clarifyingShown = true;
     clarifyingGroup = choices({
       legend: CLARIFYING.question, columns: 1,
       options: [{ value: 'discomfort', label: CLARIFYING.discomfort }, { value: 'bigger', label: CLARIFYING.bigger }],
@@ -72,10 +86,13 @@ export function setupScreen(app) {
     return fill(clarifying, clarifyingGroup, draft.signpostShown ? signpost(SIGNPOST.setup) : null);
   };
 
-  // The box for a situation in the person's own words (L81). It has no wording yet, so its
-  // label is a bracketed placeholder.
-  // Enter in either box, or its Add button, adds what's typed; Save adds anything still
-  // typed and not yet added, so nothing the person typed is ignored (BUGS.md 1).
+  // The boxes for a situation and for a goal in the person's own words (L81, L82). The
+  // situation box has no wording yet, so its label is a bracketed placeholder. Enter in
+  // either box, or its Add button, adds what's typed; Save adds anything still typed and
+  // not yet added, so nothing the person typed is ignored (BUGS.md 1). What was typed is
+  // rated directly under the box it was typed in, newest first, and focus moves to its
+  // rating (BUGS.md 3); typed in the goal box, it is also picked as the goal, and that
+  // rating is its baseline.
   const onEnter = add => e => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
@@ -86,58 +103,66 @@ export function setupScreen(app) {
     class: 'input', type: 'text', id: ownId, enterkeyhint: 'done', oninput: touched,
     onkeydown: onEnter(() => addTyped(ownInput, false)),
   });
-  let list = null;
-  // A situation in the person's own words joins the list, to be rated like the others; as
-  // the goal, that rating is its baseline (L81, L82). Focus moves to its rating.
+  // Three lists of ratings: the listed situations, those typed in the situation box, and
+  // those typed in the goal box. `typedIn` lives only in the draft; Save keeps id, text, own.
+  const lists = {};
+  const typedIn = where => draft.situations.filter(s => s.own && (s.typedIn ?? 'situations') === where).reverse();
   const addOwn = (text, asGoal, { focus = true } = {}) => {
     const clean = text.trim();
     if (!clean) return;
     const id = `own-${R.makeId()}`;
-    draft.situations.push({ id, text: clean, own: true });
+    const where = asGoal ? 'goal' : 'situations';
+    draft.situations.push({ id, text: clean, own: true, typedIn: where });
     if (asGoal) draft.goalSituation = id;
     touched();
     drawSituations();
     drawGoal();
-    if (focus) list.groups[list.groups.length - 1].querySelector('input').focus();
+    if (focus) lists[where].groups[0].querySelector('input').focus();
   };
   const addTyped = (input, asGoal, options) => {
     const text = input.value;
     input.value = '';
     addOwn(text, asGoal, options);
   };
+  const rate = (id, n) => { draft.ratings[id] = n; touched(); drawClarifying(); };
+  const remove = id => {
+    const gone = draft.situations.find(s => s.id === id);
+    draft.situations = draft.situations.filter(s => s.id !== id);
+    delete draft.ratings[id];
+    if (draft.goalSituation === id) draft.goalSituation = null;
+    touched();
+    drawSituations();
+    drawGoal();
+    (gone?.typedIn === 'goal' ? goalInput : ownInput).focus();
+  };
+  const ratingsFor = (situations, onRemove) => ratingsList({ situations, ratings: draft.ratings, onRate: rate, onRemove });
   const drawSituations = () => {
-    list = ratingsList({
-      situations: draft.situations,
-      ratings: draft.ratings,
-      onRate: (id, n) => { draft.ratings[id] = n; touched(); drawClarifying(); },
-      onRemove: id => {
-        draft.situations = draft.situations.filter(s => s.id !== id);
-        delete draft.ratings[id];
-        if (draft.goalSituation === id) draft.goalSituation = null;
-        touched();
-        drawSituations();
-        drawGoal();
-        ownInput.focus();
-      },
-    });
+    lists.listed = ratingsFor(draft.situations.filter(s => !s.own));
+    lists.situations = ratingsFor(typedIn('situations'), remove);
     fill(situations,
       h('h2', {}, SETUP.situationsLabel),
       ratingsError,
-      list,
+      lists.listed,
       h('label', { for: ownId, class: 'add-label' }, SETUP.ownSituation),
       h('div', { class: 'add-row' }, ownInput, button(COMMON.add, () => addTyped(ownInput, false), { small: true })),
+      lists.situations,
       clarifying);
     drawClarifying();
   };
 
   // Field 5: the goal, one of the situations or the person's own words (L82): "Pick one of
-  // the situations above, or type your own (which is added to the list and rated)".
+  // the situations above, or type your own (which is added to the list and rated)". A goal
+  // typed here is rated under this box, with Set-up's question over it (Q88).
   const goal = h('section', { class: 'field' });
   let goalGroup = null;
   const goalHintId = nextId('goal-hint');
   const goalId = nextId('goal-own');
   const goalInput = h('input', {
-    class: 'input', type: 'text', id: goalId, 'aria-describedby': goalHintId, enterkeyhint: 'done', oninput: touched,
+    class: 'input', type: 'text', id: goalId, 'aria-describedby': goalHintId, enterkeyhint: 'done',
+    oninput: () => {
+      touched();
+      if (goalInput.value.trim()) goalGroup.setError(null); // typing a goal answers the question
+    },
     onkeydown: onEnter(() => addTyped(goalInput, true)),
   });
   const drawGoal = () => {
@@ -148,9 +173,14 @@ export function setupScreen(app) {
       onChange: id => { draft.goalSituation = id; touched(); },
     });
     goalGroup.querySelector('legend').after(h('p', { class: 'hint', id: goalHintId }, SETUP.goalHint));
+    const typed = typedIn('goal');
+    lists.goal = ratingsFor(typed, remove);
     fill(goal, goalGroup,
       h('label', { for: goalId, class: 'add-label' }, SETUP.ownGoal),
-      h('div', { class: 'add-row' }, goalInput, button(COMMON.add, () => addTyped(goalInput, true), { small: true })));
+      h('div', { class: 'add-row' }, goalInput, button(COMMON.add, () => addTyped(goalInput, true), { small: true })),
+      typed.length ? h('p', { class: 'add-label' }, SETUP.situationsLabel) : null,
+      lists.goal);
+    placeClarifying(); // the fill above may have taken it off the page
   };
 
   drawSituations();
@@ -164,12 +194,13 @@ export function setupScreen(app) {
     const errors = R.validateSetup(draft);
     venue.setError(errors.venue && COMMON.required);
     pace.setError(errors.pace && COMMON.required);
-    list.markMissing(); // each unrated situation says so (Q76)
-    ratingsError.textContent = errors.ratings || errors.situations ? COMMON.required : '';
+    // Each unrated situation says so, wherever it is rated (Q76).
+    const missing = [lists.listed, lists.situations, lists.goal].map(list => list.markMissing()).find(Boolean);
+    ratingsError.textContent = errors.situations || (errors.ratings && !missing) ? COMMON.required : '';
     goalGroup.setError(errors.goal && COMMON.required);
     clarifyingGroup?.setError(errors.clarifying && COMMON.required);
     if (Object.keys(errors).length) {
-      document.querySelector('.error:not(:empty)')?.scrollIntoView({ block: 'center' });
+      revealFirstError(form); // BUGS.md 4
       return;
     }
     const person = R.createPerson(draft, { now: now(), today: today() });
@@ -183,11 +214,10 @@ export function setupScreen(app) {
     app.go('breathe');
   };
 
-  return {
-    back: 'welcome',
-    node: h('div', { class: 'form' },
-      h('h1', {}, SETUP.heading),
-      venue, town, pace, situations, goal,
-      button(COMMON.save, save, { primary: true })),
-  };
+  const form = h('div', { class: 'form' },
+    h('h1', {}, SETUP.heading),
+    venue, town, pace, situations, goal,
+    button(COMMON.save, save, { primary: true }));
+
+  return { back: 'welcome', node: form };
 }

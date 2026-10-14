@@ -51,6 +51,7 @@ L35 says ten words, alone, out loud, door shut. L47 adds "not much" and "at home
 With 0 people, what do "Can see them" and "I know everyone there" mean? Settling an alone step with that toggle off would clear the friends line under L41, even though no stranger was there. And when Suggest takes people from 0 to 1, the toggle is still off, which says that one person is a stranger.
 *If your call:* with 0 people, "Can see them" is fixed at "not at all" and the toggle is ignored. Steps with 0 people neither count towards the friends line nor clear it.
 **Answer:** As suggested, plus: when Suggest moves people from 0 to 1 it switches "I know everyone there" on (the first person is a friend), and the person sets "Can see them" on the form. Leaving 0 people counts as one change (the people dial) whatever "Can see them" is set to.
+*Changed 14 Oct 2026 (BUGS.md 5):* Suggest now presets "Can see them" to clearly when it moves people from 0 to 1; the person can change it on the form.
 
 **9. One-thing check: what counts as a difference?** (L27, 98, 164)
 Does 25 → 26 words count? Do decreases count? Example: the last settled step was 50 words and 3 people; the new one is 25 words and 5 people. That's two differences by the letter, one stretch by intent. Does different pasted text with the same word count matter?

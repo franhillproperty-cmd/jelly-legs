@@ -147,7 +147,7 @@ All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in
 
 ## 3. Builder's calls, not in PLAN.md or the answers
 
-- With nobody there, Suggest doesn't offer "Can see them" (it is fixed at "not at all", Q8). Moving from nobody to one person leaves "Can see them" for the person to set on the form, so the suggestion card doesn't show it.
+- With nobody there, Suggest doesn't offer "Can see them" (it is fixed at "not at all", Q8). Moving from nobody to one person presets "Can see them" to clearly, which the person can change on the form; the suggestion card shows it. That is Fran's change to answer 8 (BUGS.md 5), not a builder's call.
 - "Do your last step again" (Q34) opens Add a step flagged as suggested; the silly-easy question is answered on the form.
 - The 28-day check-in counts the phone's calendar days.
 - "The attempt that turned the notice on" (Q26) means the first one since the notice last went off.

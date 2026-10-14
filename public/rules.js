@@ -688,13 +688,15 @@ export function suggestStart(data, refused = []) {
 }
 
 // The last settled step with one dial turned up one notch (L47). Moving people from 0 to 1
-// switches "I know everyone there" on and leaves "Can see them" for the person to set (Q8).
+// switches "I know everyone there" on and presets "Can see them" to clearly, which the
+// person can change on the form (Q8, BUGS.md 5). It isn't a second change: with nobody
+// there before, "Can see them" doesn't count (Q8).
 export function suggestStep(data, dial) {
   const base = lastSettledStep(data.steps);
   const suggestion = suggestionFrom(base, data);
   suggestion[dial] = notchUp(dial, base[dial]);
   if (dial === 'people' && base.people === 0) {
-    suggestion.visibility = null;
+    suggestion.visibility = 'clearly';
     if (!suggestion.toggles.includes('knowEveryone')) suggestion.toggles.push('knowEveryone');
   }
   return suggestion;

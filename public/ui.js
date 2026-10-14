@@ -118,12 +118,17 @@ export function panel({ label, canClose = async () => true } = {}) {
 }
 
 // A labelled text box. `multiline` makes a textarea. `hint` sits between the label and the
-// box; `after` is a line under the box (L53).
+// box; `after` is a line under the box (L53). Typing an answer clears its "Needed" line
+// and its outline (BUGS.md 4); Save checks it again.
 export function textField({ label, value = '', hint, after, multiline = false, type = 'text', onInput, ...rest }) {
   const id = nextId('f');
   const input = h(multiline ? 'textarea' : 'input', {
     id, class: 'input', type: multiline ? null : type, rows: multiline ? 4 : null,
-    oninput: e => onInput?.(e.target.value), ...rest,
+    oninput: e => {
+      if (error.textContent && e.target.value.trim()) setError(error, input, null);
+      onInput?.(e.target.value);
+    },
+    ...rest,
   });
   input.value = value ?? '';
   const hintEl = hint ? h('p', { class: 'hint', id: `${id}-hint` }, hint) : null;
@@ -138,6 +143,7 @@ export function textField({ label, value = '', hint, after, multiline = false, t
 // Show or clear an error, keeping any hint the control is already described by.
 function setError(errorEl, control, message) {
   errorEl.textContent = message ?? '';
+  if (!message) errorEl.closest('.is-first-error')?.classList.remove('is-first-error');
   if (!control) return;
   const ids = [control.dataset.describe, message ? errorEl.id : null].filter(Boolean).join(' ');
   if (ids) control.setAttribute('aria-describedby', ids);
@@ -145,7 +151,8 @@ function setError(errorEl, control, message) {
   control.toggleAttribute('aria-invalid', !!message);
 }
 
-// A set of choices shown as large buttons, backed by real radio inputs.
+// A set of choices shown as large buttons, backed by real radio inputs. Picking one clears
+// its "Needed" line and its outline (BUGS.md 4).
 export function choices({ legend, options, value, onChange, disabled = false, columns }) {
   const name = nextId('c');
   const error = h('p', { class: 'error', id: `${name}-error`, role: 'alert' });
@@ -154,7 +161,11 @@ export function choices({ legend, options, value, onChange, disabled = false, co
     h('div', { class: 'choice-row' }, options.map(o => {
       const input = h('input', {
         type: 'radio', name, value: String(o.value), checked: o.value === value,
-        disabled: disabled || o.disabled, onchange: () => onChange?.(o.value),
+        disabled: disabled || o.disabled,
+        onchange: () => {
+          setError(error, fieldset, null);
+          onChange?.(o.value);
+        },
       });
       return h('label', { class: `choice ${o.disabled ? 'is-disabled' : ''}` }, input, h('span', {}, o.label));
     })),
@@ -222,6 +233,28 @@ export function confetti() {
   }
   document.body.append(box);
   setTimeout(() => box.remove(), 1000);
+}
+
+// After a Save that couldn't go ahead (BUGS.md 4): bring the first question with a
+// "Needed" line under it to the top of the screen, mark it until it is answered, and move
+// focus into it, so the person sees which question it is and a screen reader reads it.
+// Returns that question, or null if nothing has an error.
+export function revealFirstError(root) {
+  const error = [...root.querySelectorAll('.error')].find(e => e.textContent.trim() && !e.closest('[hidden]'));
+  if (!error) return null;
+  const field = error.closest('fieldset, .field') ?? error;
+  root.querySelectorAll('.is-first-error').forEach(el => el.classList.remove('is-first-error'));
+  field.classList.add('is-first-error');
+  const control = field.querySelector('input:not([disabled]):not([type="hidden"]), textarea:not([disabled])');
+  if (control) control.focus({ preventScroll: true });
+  else {
+    field.tabIndex = -1;
+    field.focus({ preventScroll: true });
+  }
+  // A question named by a heading above it (Set a new goal) is shown from that heading.
+  const heading = !field.querySelector('legend') && field.getAttribute('aria-labelledby');
+  ((heading && document.getElementById(heading)) || field).scrollIntoView({ block: 'start' }); // the top bar is kept clear (scroll-padding-top)
+  return field;
 }
 
 export function notice(...children) {

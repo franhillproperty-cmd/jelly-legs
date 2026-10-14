@@ -3,7 +3,7 @@
 // never scrolls away. Once the goal step settles, Set a new goal takes Suggest's place.
 
 import * as R from '../rules.js';
-import { h, button, link, panel, notice, nextId } from '../ui.js';
+import { h, button, link, panel, notice, nextId, revealFirstError } from '../ui.js';
 import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON, QUIPS, SETUP } from '../strings.js';
 import { rowText, stateText, formatDate, progressText, lastTimeText } from '../format.js';
 import { now, today } from '../store.js';
@@ -111,18 +111,20 @@ function checkIn(app) {
     ratings,
     onRate: (id, n) => { ratings[id] = n; app.setDirty(true); },
   });
-  return h('section', { class: 'checkin' },
+  const section = h('section', { class: 'checkin' },
     h('h2', {}, LADDER.checkInPrompt),
     list,
     button(COMMON.save, () => {
       const result = R.addCheckIn(app.data().person, ratings, { now: now(), today: today() });
       if (!result.ok) {
-        list.markMissing()?.scrollIntoView({ block: 'center' });
+        list.markMissing();
+        revealFirstError(section); // BUGS.md 4
         return;
       }
       app.setDirty(false);
       if (!app.save({ ...app.data(), person: result.person })) app.setDirty(true);
     }, { primary: true }));
+  return section;
 }
 
 // Suggest a step (L47, L93, Q32-Q38): which dial, the suggestion with the silly-easy
@@ -194,7 +196,8 @@ async function setNewGoal(app) {
     }
     const result = R.startNewLadder(app.data(), picker.choice(), { now: now(), today: today() });
     if (!result.ok) {
-      picker.showErrors(result.errors)?.scrollIntoView({ block: 'center' });
+      picker.showErrors(result.errors);
+      revealFirstError(p.content); // BUGS.md 4
       return;
     }
     app.setDirty(false);

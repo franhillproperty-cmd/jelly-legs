@@ -16,12 +16,15 @@ export function venueField({ value, getTown, onChange }) {
   field.input.addEventListener('change', () => onChange(field.input.value, 'change'));
   const friends = button(VENUE.friendsButton, () => {
     field.input.value = VENUE.friendsButton; // exactly the text the find-somewhere rule looks for (Q28)
+    field.setError(null); // an answer, as typing one is (BUGS.md 4)
     onChange(field.input.value, 'change');
   }, { small: true });
   field.input.after(friends);
 
+  // The help sits after the field, not inside it, so a "Needed" mark outlines only the
+  // question and its box (BUGS.md 4).
   const searches = h('div', { class: 'searches' }, VENUE.searches.map(s => searchButton(s, getTown)));
-  field.append(
+  const wrap = h('div', { class: 'venue' }, field,
     h('div', { class: 'help' },
       h('p', {}, VENUE.startWithFriends),
       h('p', {}, VENUE.clubIntro),
@@ -32,7 +35,7 @@ export function venueField({ value, getTown, onChange }) {
       h('p', {}, outLink(VENUE.toastmastersLink, VENUE.toastmastersUrl)),
       searches,
       h('p', {}, VENUE.anyRoom)));
-  return Object.assign(field, { friends });
+  return Object.assign(wrap, { input: field.input, setError: field.setError, friends });
 }
 
 // A search button shows the query in an editable box with the town filled in, and Go
@@ -64,6 +67,7 @@ export function paceField({ pace, onChange }) {
   group.append(
     button(SETUP.timeYourself, () => timeYourself(wpm => {
       group.setValue(null);
+      group.setError(null); // a timed pace answers the question (BUGS.md 4)
       timed.textContent = SETUP.wordsAMinute(wpm);
       onChange({ choice: 'timed', wpm });
     }), { quiet: true }),

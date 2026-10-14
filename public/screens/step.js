@@ -2,7 +2,7 @@
 // screen with its rehearsal counter (L99-L101), Log an attempt (L102-L105) and the reply.
 
 import * as R from '../rules.js';
-import { h, textField, choices, rating, toggle, button, link, ask, tell, notice, confetti, nextId } from '../ui.js';
+import { h, textField, choices, rating, toggle, button, link, ask, tell, notice, confetti, nextId, revealFirstError } from '../ui.js';
 import {
   FORM, ONE_THING, EARLY_CAUTION, SMALLER, SIGNPOST, STEP, LOG, REPLIES, COMPLETE, LADDER, COMMON,
   TOGGLE_LABELS, OWN_ITEM_LABEL, VISIBILITY, MATTERS, UNITS,
@@ -84,6 +84,7 @@ export function stepFormScreen(app, { id, query }) {
       if (count > 0) { // the pasted text sets the number (Q124)
         form.words = count;
         words.input.value = count;
+        words.setError(null); // an answer, so its "Needed" mark goes (BUGS.md 4)
         showTimes();
       }
       sizing();
@@ -127,6 +128,7 @@ export function stepFormScreen(app, { id, query }) {
     if (alone) {
       form.visibility = 'notAtAll';
       visibility.setValue('notAtAll');
+      visibility.setError(null);
     }
     visibility.setDisabled(alone);
     const know = toggles[R.TOGGLES.indexOf('knowEveryone')];
@@ -141,6 +143,7 @@ export function stepFormScreen(app, { id, query }) {
   different.input.after(button(FORM.nothingDifferent, () => {
     different.input.value = FORM.nothingDifferent;
     form.whatsDifferent = FORM.nothingDifferent;
+    different.setError(null);
     changed();
   }, { small: true, quiet: true }));
 
@@ -168,6 +171,7 @@ export function stepFormScreen(app, { id, query }) {
       cleared = false;
       form.feelsEasy = editing.feelsEasy;
       easy.setValue(form.feelsEasy);
+      easy.setError(null);
       easy.setDisabled(true);
     }
     changed();
@@ -179,6 +183,7 @@ export function stepFormScreen(app, { id, query }) {
   const choose = d => () => {
     distractor.input.value = d;
     form.distractor = d;
+    distractor.setError(null);
     stuckList.replaceChildren();
     distractor.input.focus();
     changed();
@@ -214,7 +219,7 @@ export function stepFormScreen(app, { id, query }) {
       for (const [key, e] of Object.entries(prepared.errors)) {
         fields[key]?.setError(e.kind === 'range' ? COMMON.wholeNumber(e.min) : COMMON.required);
       }
-      document.querySelector('.error:not(:empty)')?.scrollIntoView({ block: 'center' });
+      revealFirstError(document.getElementById('main')); // BUGS.md 4
       return;
     }
     // First, one thing at a time (L98, Q75).
@@ -405,8 +410,8 @@ export function stepScreen(app, { id }) {
     h('div', { class: 'counter' }, h('p', { class: 'count' }, counterText(step)), plusButton),
     step.rehearsalFeel.length ? h('p', { class: 'feels' }, step.rehearsalFeel.map(f => STEP.feelsInLine[f]).join(', ')) : null,
     R.asRehearsedAsItGets(step) ? h('p', {}, STEP.asRehearsed) : null,
-    undoLink,
-    actions.includes('markReadyNow') ? link(STEP.markReadyNow, markReady) : null,
+    // Side by side with a clear gap, or one under the other on a narrow screen (BUGS.md 6).
+    h('div', { class: 'links' }, undoLink, actions.includes('markReadyNow') ? link(STEP.markReadyNow, markReady) : null),
     step.readyEarly ? h('p', { class: 'hint' }, STEP.readyEarly(step.readyEarlyCount, step.readyEarlyTarget)) : null,
     actions.includes('logAttempt') ? button(STEP.logAttempt, leaveTo(`log/${step.id}`)) : null) : null;
 
@@ -506,7 +511,7 @@ export function logScreen(app, { id }) {
     const result = R.logAttempt(app.data(), step.id, input, { now: now(), today: today() });
     if (!result.ok) {
       for (const [key, e] of Object.entries(result.errors)) fields[key].setError(e.kind === 'future' ? LOG.future : COMMON.required);
-      document.querySelector('.error:not(:empty)')?.scrollIntoView({ block: 'center' });
+      revealFirstError(document.getElementById('main')); // BUGS.md 4
       return;
     }
     app.setDirty(false);
