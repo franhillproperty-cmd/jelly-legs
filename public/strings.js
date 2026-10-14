@@ -222,6 +222,11 @@ export const LADDER = {
   },
   empty: 'Your ladder starts here. Add a step, or let the app suggest one. This is the shape a ladder can take:', // Q75
   addStep: 'Add a step',
+  oneAtATime: 'One step at a time: rehearse it, do it, log it, then add the next one.', // Q146
+  // Add a step while a step is already planning, rehearsing or ready (Q146).
+  onTheGo: title => `You've already got a step on the go: ${title}. The ladder works one step at a time. Finish that one first?`,
+  goToStep: 'Go to that step',
+  addAnyway: 'Add another anyway',
   suggestStep: 'Suggest a step',
   setNewGoal: 'Set a new goal', // in place of Suggest a step while the ladder is complete (Fran's words)
   earlier: 'Ladders you\'ve finished', // Q143
@@ -325,6 +330,15 @@ export const SMALLER = { // Q31, Q46, Q75, Q135
 // ---------------------------------------------------------------- the step screen (L100-L101)
 
 export const STEP = {
+  // Where the step is, at the top of the Step screen, and what to do now (Q145).
+  stages: { plan: 'Plan', rehearse: 'Rehearse', ready: 'Ready', doIt: 'Do it', logIt: 'Log it' },
+  now: {
+    planning: 'Too big for now. Edit it smaller, then rehearse.',
+    rehearsing: 'Rehearse with your distractor on, press +1 each time, and when you reach your number the step is ready.',
+    ready: 'Go and do it in the real world. When you have, come back and press Log an attempt.',
+    settled: 'Done. Add the next step from the Ladder.',
+    didntStay: 'Make the next step smaller, then rehearse that one.',
+  },
   showText: 'Show the text', // Q69
   hideText: '[Hide the text]', // no wording yet
   why: 'The real thing feels easier than a distracted rehearsal, because in the room the distraction is gone.', // L100, Q84

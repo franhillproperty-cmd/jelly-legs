@@ -844,6 +844,13 @@ export function ladderOrder(steps) {
   return { current, others: newest.filter(s => s !== current) };
 }
 
+// Where a step is, for the strip at the top of its Step screen (Q145): Plan, Rehearse,
+// Ready, Do it, Log it. A step that settled or didn't stay has been done and logged, so it
+// is at Log it.
+export const STAGES = Object.freeze(['plan', 'rehearse', 'ready', 'doIt', 'logIt']);
+const STAGE_OF = { planning: 'plan', rehearsing: 'rehearse', ready: 'ready', settled: 'logIt', didntStay: 'logIt' };
+export const stepStage = step => STAGE_OF[step.state];
+
 // A step on the ladder now, or on an earlier one (which the Step screen shows read-only).
 export function findStep(data, id) {
   const step = data.steps.find(s => s.id === id);

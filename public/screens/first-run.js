@@ -5,16 +5,21 @@ import { h, paragraphs, textField, choices, button, link, fill, nextId, revealFi
 import { APP_NAME, TAGLINE, WELCOME, SETUP, SITUATION_TEXT, CLARIFYING, SIGNPOST, COMMON } from '../strings.js';
 import { now, today } from '../store.js';
 import { venueField, paceField, ratingsList, signpost, importData } from './parts.js';
+import { createScene, LADDER_VIEW } from '../scene-draw.js';
 
 // Shown once; after Set-up it is reached only from Settings, with a back control and no
-// Get started (Q64).
+// Get started (Q64). Under the tagline, the jelly, large, at the bottom of the ladder, legs
+// wobbling (Q147).
 export function welcomeScreen(app) {
   const again = !!app.data().person;
+  const scene = createScene({ position: 0, wobble: 1 });
+  scene.element.setAttribute('viewBox', LADDER_VIEW);
   return {
     back: again ? 'settings' : null,
     node: h('div', { class: 'welcome' },
       h('h1', {}, APP_NAME),
       h('p', { class: 'tagline' }, TAGLINE),
+      scene.element,
       paragraphs(WELCOME.paragraphs),
       again ? null : h('div', { class: 'actions' },
         button(WELCOME.getStarted, () => app.go('setup'), { primary: true }),

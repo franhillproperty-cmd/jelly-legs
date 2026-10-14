@@ -3,7 +3,7 @@
 // never scrolls away. Once the goal step settles, Set a new goal takes Suggest's place.
 
 import * as R from '../rules.js';
-import { h, button, link, panel, notice, nextId, revealFirstError } from '../ui.js';
+import { h, button, link, panel, notice, nextId, revealFirstError, ask } from '../ui.js';
 import { LADDER, EXAMPLE_LADDER, SUGGEST, SIGNPOST, DIAL_LABELS, COMMON, QUIPS, SETUP } from '../strings.js';
 import { rowText, stateText, formatDate, progressText, lastTimeText } from '../format.js';
 import { now, today } from '../store.js';
@@ -47,6 +47,7 @@ export function ladderScreen(app) {
       h('p', { class: 'quip' }, QUIPS[state.quip]),
       goalLine,
       h('p', { class: 'progress' }, progressText(person)),
+      h('p', { class: 'one-at-a-time' }, LADDER.oneAtATime), // always shown (Q146)
       R.checkInDue(person, today()) ? checkIn(app) : null,
       notices.length ? h('div', { class: 'notices' }, notices) : null,
       data.steps.length
@@ -54,7 +55,7 @@ export function ladderScreen(app) {
         : emptyLadder(person.pace),
       earlierLadders(app)),
     bar: h('div', { class: 'actionbar' },
-      button(LADDER.addStep, () => app.go('add'), { primary: true }),
+      button(LADDER.addStep, () => addStep(app), { primary: true }),
       complete ? button(LADDER.setNewGoal, () => setNewGoal(app)) : button(LADDER.suggestStep, () => suggest(app))),
     // Two frames on, so the old place has been drawn and the move shows. After a new goal,
     // back to the top to watch the jelly come down, with the new goal read out.
@@ -67,6 +68,26 @@ export function ladderScreen(app) {
       if (from) requestAnimationFrame(() => requestAnimationFrame(() => scene.update(state)));
     },
   };
+}
+
+// Add a step. With a step already on the go (planning, rehearsing or ready), ask first:
+// the ladder works one step at a time (Q146). The step on the go is the one at the top of
+// the Ladder. Dismissing the question stays on the Ladder.
+async function addStep(app) {
+  const onTheGo = R.ladderOrder(app.data().steps).current;
+  if (onTheGo) {
+    const choice = await ask({
+      body: [LADDER.onTheGo(onTheGo.title)],
+      buttons: [
+        { label: LADDER.goToStep, value: 'step', primary: true, safe: true },
+        { label: LADDER.addAnyway, value: 'add' },
+      ],
+      cancel: null,
+    });
+    if (choice === 'step') return app.go(`step/${onTheGo.id}`);
+    if (choice !== 'add') return false;
+  }
+  return app.go('add');
 }
 
 // A row on the ladder, or on an earlier one, which always has the quiet look.

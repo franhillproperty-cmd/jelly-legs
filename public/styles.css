@@ -452,19 +452,14 @@ textarea.input { min-height: 7rem; resize: vertical; }
   .button, .choice span, .tab { transition: background-color 120ms, color 120ms, border-color 120ms; }
 }
 
-/* ---------------------------------------------------------------- the look: breathing circle */
+/* ---------------------------------------------------------------- the look: breathing with the jelly */
 
-/* It swells twice (the breath in, then the short sip), then sinks over about six seconds. */
+/* The jelly, glowing, swells twice (the breath in, then the short sip), then settles over
+   about six seconds, its feet staying where they are. */
 .breath { display: grid; place-items: center; height: 13rem; margin: 1rem 0 0.5rem; }
-.breath-glow {
-  width: 10rem;
-  height: 10rem;
-  border-radius: 50%;
-  background: var(--orange);
-  box-shadow: 0 0 2rem 0.5rem var(--orange);
-  transform: scale(0.6);
-}
-.breath.is-going .breath-glow { animation: breathe 9s infinite; }
+.breath-jelly { width: 10rem; height: 10rem; transform: scale(0.6); transform-origin: 50% 100%; }
+.breath-jelly .jelly { width: 100%; height: 100%; filter: drop-shadow(0 0 0.9rem var(--orange)); }
+.breath.is-going .breath-jelly { animation: breathe 9s infinite; }
 @keyframes breathe {
   0% { transform: scale(0.6); animation-timing-function: ease-out; }
   22% { transform: scale(0.84); animation-timing-function: linear; }   /* the breath in, 2 seconds */
@@ -491,9 +486,9 @@ textarea.input { min-height: 7rem; resize: vertical; }
   to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; }
 }
 
-/* Less motion: the circle sits still with no control, and there's no confetti. */
+/* Less motion: the jelly sits still with no control, and there's no confetti. */
 @media (prefers-reduced-motion: reduce) {
-  .breath.is-going .breath-glow { animation: none; }
+  .breath.is-going .breath-jelly { animation: none; }
   .breath-control { display: none; }
   .confetti { display: none; }
 }
@@ -624,16 +619,17 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .scene .sc-face,
 .scene .sc-pupils { transition: transform 1.2s cubic-bezier(.45,.05,.35,1); }
 
-/* The jelly */
-.scene .sc-jelly-body { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.4; stroke-linejoin: round; }
-.scene .sc-sheen { fill: none; stroke: var(--sc-sheen); stroke-width: 1.6; stroke-linecap: round; opacity: 0.6; }
-.scene .sc-ink { fill: var(--sc-ink); }
-.scene .sc-glint { fill: var(--sc-sheen); }
-.scene .sc-leg-edge { stroke: var(--sc-ink); stroke-width: 4.6; stroke-linecap: round; }
-.scene .sc-leg-fill { stroke: var(--sc-jelly); stroke-width: 2.2; stroke-linecap: round; }
-.scene .sc-foot { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.1; }
-.scene .sc-mouth-small { fill: none; stroke: var(--sc-ink); stroke-width: 1.3; stroke-linecap: round; }
-.scene .sc-mouth-big { fill: var(--sc-ink); opacity: 0; }
+/* The jelly, in the scene and on its own (jelly.js): the one orange, near-black lines. */
+.jelly { --sc-jelly: var(--orange); --sc-ink: var(--on-orange); --sc-sheen: #ffffff; display: block; overflow: visible; }
+:is(.scene, .jelly) .sc-jelly-body { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.4; stroke-linejoin: round; }
+:is(.scene, .jelly) .sc-sheen { fill: none; stroke: var(--sc-sheen); stroke-width: 1.6; stroke-linecap: round; opacity: 0.6; }
+:is(.scene, .jelly) .sc-ink { fill: var(--sc-ink); }
+:is(.scene, .jelly) .sc-glint { fill: var(--sc-sheen); }
+:is(.scene, .jelly) .sc-leg-edge { stroke: var(--sc-ink); stroke-width: 4.6; stroke-linecap: round; }
+:is(.scene, .jelly) .sc-leg-fill { stroke: var(--sc-jelly); stroke-width: 2.2; stroke-linecap: round; }
+:is(.scene, .jelly) .sc-foot { fill: var(--sc-jelly); stroke: var(--sc-ink); stroke-width: 1.1; }
+:is(.scene, .jelly) .sc-mouth-small { fill: none; stroke: var(--sc-ink); stroke-width: 1.3; stroke-linecap: round; }
+:is(.scene, .jelly) .sc-mouth-big { fill: var(--sc-ink); opacity: 0; }
 .scene[data-place="stage"] .sc-mouth-small { opacity: 0; }
 .scene[data-place="stage"] .sc-mouth-big { opacity: 1; }
 
@@ -643,19 +639,28 @@ textarea.input { min-height: 7rem; resize: vertical; }
 .scene .sc-jelly-eyes { transition: transform 0.6s ease 0.6s; }
 .scene .sc-mouth { transition: opacity 0.4s ease 0.8s; }
 
+/* Poses, for the replies: sitting on a rung with its legs hanging below it, or climbing,
+   its right leg lifted for the next rung and its body leaning up the ladder. */
+:is(.scene, .jelly) .sc-pose-body,
+:is(.scene, .jelly) .sc-pose-leg { transform-box: fill-box; transform-origin: 50% 100%; transition: transform 0.5s ease; }
+:is(.scene, .jelly)[data-pose="sit"] .sc-pose-body { transform: translateY(6.8px); }
+:is(.scene, .jelly)[data-pose="sit"] .sc-pose-leg { transform: translateY(8px); }
+:is(.scene, .jelly)[data-pose="climb"] .sc-pose-leg-r { transform: translate(2.4px, -3.4px) rotate(-18deg); }
+:is(.scene, .jelly)[data-pose="climb"] .sc-pose-body { transform: translate(1px, -2.2px) rotate(7deg); }
+
 /* The wobble: the legs knock about their feet and the body jiggles, both scaled by
    --wobble (0 to 1, set on the svg). Two identical sets of keyframes, so swapping between
    them restarts the animation with the new amplitude. */
-.scene .sc-leg,
-.scene .sc-body { transform-box: fill-box; transform-origin: 50% 100%; }
-.scene .sc-leg-l { animation: sc-knock-l-a 0.44s ease-in-out infinite alternate; }
-.scene .sc-leg-r { animation: sc-knock-r-a 0.44s ease-in-out infinite alternate; }
-.scene .sc-body { animation: sc-jiggle-a 0.44s ease-in-out infinite alternate; }
-.scene[data-wob="b"] .sc-leg-l { animation-name: sc-knock-l-b; }
-.scene[data-wob="b"] .sc-leg-r { animation-name: sc-knock-r-b; }
-.scene[data-wob="b"] .sc-body { animation-name: sc-jiggle-b; }
-.scene[data-still] .sc-leg,
-.scene[data-still] .sc-body { animation: none; }
+:is(.scene, .jelly) .sc-leg,
+:is(.scene, .jelly) .sc-body { transform-box: fill-box; transform-origin: 50% 100%; }
+:is(.scene, .jelly) .sc-leg-l { animation: sc-knock-l-a 0.44s ease-in-out infinite alternate; }
+:is(.scene, .jelly) .sc-leg-r { animation: sc-knock-r-a 0.44s ease-in-out infinite alternate; }
+:is(.scene, .jelly) .sc-body { animation: sc-jiggle-a 0.44s ease-in-out infinite alternate; }
+:is(.scene, .jelly)[data-wob="b"] .sc-leg-l { animation-name: sc-knock-l-b; }
+:is(.scene, .jelly)[data-wob="b"] .sc-leg-r { animation-name: sc-knock-r-b; }
+:is(.scene, .jelly)[data-wob="b"] .sc-body { animation-name: sc-jiggle-b; }
+:is(.scene, .jelly)[data-still] .sc-leg,
+:is(.scene, .jelly)[data-still] .sc-body { animation: none; }
 
 @keyframes sc-knock-l-a {
   from { transform: rotate(calc(var(--wobble, 0) * -14deg)); }
@@ -682,8 +687,30 @@ textarea.input { min-height: 7rem; resize: vertical; }
   to { transform: scale(calc(1 - var(--wobble, 0) * 0.02), calc(1 + var(--wobble, 0) * 0.02)); }
 }
 
-/* Less motion: nothing in the scene moves; everything sits in its final place. */
+/* Less motion: nothing in the scene or any jelly moves; everything sits in its final place. */
 @media (prefers-reduced-motion: reduce) {
   .scene,
-  .scene * { animation: none !important; transition: none !important; }
+  .scene *,
+  .jelly,
+  .jelly * { animation: none !important; transition: none !important; }
 }
+
+/* ---------------------------------------------------------------- the look: the jelly elsewhere */
+
+/* The Welcome screen and the replies: the part of the scene around the ladder, larger. */
+.welcome .scene { margin: 0.5rem 0 1.25rem; }
+.reply .scene { margin: 1.25rem 0 1rem; }
+
+/* The Step screen: the jelly, small, beside where the step is, and a line for what to do now. */
+.stage-row { display: flex; align-items: center; gap: 0.75rem; margin: 0.25rem 0 0.5rem; }
+.stage-row .jelly { flex: none; width: 2.6rem; height: 2.8rem; }
+.stages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0; list-style: none; margin: 0; padding: 0; font-size: 0.9rem; font-weight: 600; }
+.stages li { display: flex; align-items: center; color: var(--muted); }
+/* A drawn chevron between stages, so nothing extra is read aloud. */
+.stages li + li::before { content: ""; width: 0.38rem; height: 0.38rem; margin: 0 0.5rem 0 0.35rem; border: solid currentColor; border-width: 2px 2px 0 0; transform: rotate(45deg); color: var(--muted); }
+.stages .done { color: var(--text); }
+.stages [aria-current] > span { padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--orange); color: var(--on-orange); }
+.stage-line { margin: 0 0 1rem; }
+
+/* The Ladder: one step at a time, under the goal. */
+.one-at-a-time { color: var(--muted); }

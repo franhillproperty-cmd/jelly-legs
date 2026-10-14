@@ -3,16 +3,20 @@
 // lectern, a ladder leaning on the stage lip, a row of round-headed silhouettes in front,
 // and the orange jelly on the ladder. No libraries and no text in the drawing.
 //
-//   createScene({ position, atTop, wobble }) -> { element, update(state) }
+//   createScene({ position, atTop, wobble, pose, place }) -> { element, update(state) }
 //
 // position 0..1 is how far up the ladder the jelly stands; it goes to the nearest of nine
 // rungs, so its feet always land on one.
 // atTop puts it on the stage at the lectern, facing the audience. wobble 0..1 is how much
 // its legs wobble, set as --wobble on the svg root and used by the CSS keyframes in
-// styles.css. Every move is a CSS transition; nothing is animated from JavaScript.
-// The state comes from sceneState in scene.js.
+// styles.css. pose is 'stand' (the default), 'sit' (on its rung) or 'climb' (a leg lifted
+// for the rung above); place 'floor' stands it on the floor at the foot of the ladder. Every
+// move is a CSS transition; nothing is animated from JavaScript.
+// The Ladder's state comes from sceneState in scene.js. The Welcome screen and the replies
+// show the part of the scene around the ladder, larger (LADDER_VIEW).
 
-const NS = 'http://www.w3.org/2000/svg';
+import { el, jellyParts, setWobble } from './jelly.js';
+
 let count = 0; // keeps gradient ids unique each time the Ladder draws a new scene
 
 // Geometry, in viewBox units (360 x 220).
@@ -29,6 +33,11 @@ const STAGE_FLOOR_Y = 117.5;         // where feet stand on the stage boards
 const LECTERN_SPOT = { x: 254, y: STAGE_FLOOR_Y };
 const JELLY_SCALE = 1.2;             // the jelly is drawn about its feet, then scaled
 const FACE_ABOVE_FEET = 19.5 * JELLY_SCALE; // the jelly's eyes, above its feet
+const FLOOR_SPOT = { x: 62, y: FLOOR_Y };   // on the floor, just left of the ladder's foot
+
+// The part of the scene around the ladder, for a larger jelly: the floor, the ladder, the
+// stage's edge and the first of the audience.
+export const LADDER_VIEW = '36 96 168 124';
 
 // The right rail passes through the lip; the left rail is RAIL_GAP to its left.
 const rightRailX = y => LIP.x - (y - LIP.y) * SLOPE;
@@ -39,13 +48,17 @@ const clamp01 = n => (Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0);
 
 function normalise(input) {
   const state = input ?? {};
-  return { position: clamp01(Number(state.position)), atTop: Boolean(state.atTop), wobble: clamp01(Number(state.wobble)) };
+  return {
+    position: clamp01(Number(state.position)), atTop: Boolean(state.atTop), wobble: clamp01(Number(state.wobble)),
+    pose: ['sit', 'climb'].includes(state.pose) ? state.pose : 'stand', floor: state.place === 'floor' || state.floor === true,
+  };
 }
 
-// Where the jelly's feet go: on the nearest rung, or at the lectern.
+// Where the jelly's feet go: on the nearest rung, at the lectern, or on the floor.
 export function jellySpot(state) {
   const s = normalise(state);
   if (s.atTop) return { x: LECTERN_SPOT.x, y: LECTERN_SPOT.y, rung: null, onStage: true };
+  if (s.floor) return { x: FLOOR_SPOT.x, y: FLOOR_SPOT.y, rung: null, onStage: false, onFloor: true };
   const rung = Math.round(s.position * (RUNGS - 1));
   const y = rungY(rung);
   // The feet rest on the top of the rung's stroke.
@@ -64,13 +77,6 @@ const AUDIENCE = [
 ];
 
 const r1 = n => Math.round(n * 100) / 100;
-
-function el(tag, attrs = {}, children = []) {
-  const node = document.createElementNS(NS, tag);
-  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
-  for (const child of children) node.appendChild(child);
-  return node;
-}
 
 const pts = list => list.map(([x, y]) => `${r1(x)},${r1(y)}`).join(' ');
 
@@ -193,36 +199,9 @@ export function createScene(initial) {
   }
   svg.appendChild(ladder);
 
-  // The jelly. Local coordinates: its feet stand on y = 0.
-  const leg = side => el('g', { class: `sc-leg sc-leg-${side < 0 ? 'l' : 'r'}` }, [
-    el('line', { class: 'sc-leg-edge', x1: side * 4.6, y1: -10, x2: side * 5, y2: -2.6 }),
-    el('line', { class: 'sc-leg-fill', x1: side * 4.6, y1: -10, x2: side * 5, y2: -2.6 }),
-    el('ellipse', { class: 'sc-foot', cx: side * 5.8, cy: -1.7, rx: 3.1, ry: 1.7 }),
-  ]);
-  const eyes = el('g', { class: 'sc-jelly-eyes' }, [
-    el('ellipse', { class: 'sc-ink', cx: -5.2, cy: -19.5, rx: 1.9, ry: 2.6 }),
-    el('ellipse', { class: 'sc-ink', cx: 5.2, cy: -19.5, rx: 1.9, ry: 2.6 }),
-    el('circle', { class: 'sc-glint', cx: -4.55, cy: -20.5, r: 0.75 }),
-    el('circle', { class: 'sc-glint', cx: 5.85, cy: -20.5, r: 0.75 }),
-  ]);
-  const body = el('g', { class: 'sc-body' }, [
-    // A jelly turned out of a mould: soft bulging sides, a slight waist, a rounded top,
-    // a flat-ish base, and a little lopsided.
-    el('path', {
-      class: 'sc-jelly-body',
-      d: 'M-12.5,-7.2 C-15.6,-8 -16.9,-12.5 -16.6,-17.5 C-16.4,-21.5 -15.6,-24.3 -13.8,-25.9 '
-        + 'C-13.1,-26.5 -12.6,-26.9 -12.2,-27.3 C-12.2,-33.4 -7,-37.6 -0.4,-37.5 '
-        + 'C6.6,-37.4 12.4,-33.2 12.3,-27.1 C12.8,-26.7 13.4,-26.3 14,-25.7 '
-        + 'C15.9,-24 16.8,-21.2 16.8,-17.2 C16.9,-12.2 15.5,-8 12.4,-7.2 '
-        + 'C7,-6.6 -7,-6.6 -12.5,-7.2 Z',
-    }),
-    el('path', { class: 'sc-sheen', d: 'M-8,-30.5 C-7.4,-33.4 -5,-35.2 -2.2,-35.5' }),
-    el('path', { class: 'sc-sheen', d: 'M-14.2,-21 C-14.6,-17.8 -14.4,-14.6 -13.6,-12.2' }),
-    eyes,
-    el('path', { class: 'sc-mouth sc-mouth-small', d: 'M-2.8,-14 Q0,-11.5 2.8,-14' }),
-    el('path', { class: 'sc-mouth sc-mouth-big', d: 'M-3.9,-14.7 Q0,-15 3.9,-14.7 Q3.5,-10 0,-10 Q-3.5,-10 -3.9,-14.7 Z' }),
-  ]);
-  const jelly = el('g', { class: 'sc-jelly', transform: `scale(${JELLY_SCALE})` }, [leg(-1), leg(1), body]);
+  // The jelly (jelly.js). Local coordinates: its feet stand on y = 0.
+  const { parts, eyes } = jellyParts();
+  const jelly = el('g', { class: 'sc-jelly', transform: `scale(${JELLY_SCALE})` }, parts);
   const jellyStep = el('g', { class: 'sc-jmove sc-jstep' }, [jelly]);
   const jellyAcross = el('g', { class: 'sc-jmove sc-jacross' }, [jellyStep]);
   const jellyLadder = el('g', { class: 'sc-jmove sc-jladder' }, [jellyAcross]);
@@ -286,7 +265,6 @@ export function createScene(initial) {
   });
 
   let current = null;
-  let phase = 'a';
 
   function update(next) {
     const s = normalise(next);
@@ -303,20 +281,15 @@ export function createScene(initial) {
     jellyAcross.style.transform = `translateX(${r1(spot.x - onLadder.x)}px)`;
     jellyStep.style.transform = `translateY(${r1(spot.y - onLadder.y)}px)`;
 
-    // On the ladder it looks up at the stage; at the lectern it looks out at the audience.
-    eyes.style.transform = spot.onStage ? 'translate(0px, 0.9px)' : 'translate(1px, -0.9px)';
-    svg.setAttribute('data-place', spot.onStage ? 'stage' : 'ladder');
+    // On the ladder it looks up at the stage; at the lectern it looks out at the audience;
+    // on the floor it looks up the ladder.
+    eyes.style.transform = spot.onStage ? 'translate(0px, 0.9px)' : spot.onFloor ? 'translate(1.2px, -1.1px)' : 'translate(1px, -0.9px)';
+    svg.setAttribute('data-place', spot.onStage ? 'stage' : spot.onFloor ? 'floor' : 'ladder');
+    svg.setAttribute('data-pose', spot.onStage || spot.onFloor ? 'stand' : s.pose);
 
-    // The wobble. Restarting the keyframes (by swapping to an identical copy) makes every
-    // browser pick up the new amplitude; at 0 the animation is switched off altogether.
+    // The wobble (jelly.js), restarted only when it changes.
     const w = r1(s.wobble);
-    if (!current || current.wobble !== w) {
-      svg.style.setProperty('--wobble', String(w));
-      if (current) phase = phase === 'a' ? 'b' : 'a';
-      svg.setAttribute('data-wob', phase);
-      if (w === 0) svg.setAttribute('data-still', '');
-      else svg.removeAttribute('data-still');
-    }
+    if (!current || current.wobble !== w) setWobble(svg, w, !!current);
 
     // Faces turn to where the jelly's face will be.
     const tx = spot.x;

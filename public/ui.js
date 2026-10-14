@@ -253,8 +253,20 @@ export function revealFirstError(root) {
   }
   // A question named by a heading above it (Set a new goal) is shown from that heading.
   const heading = !field.querySelector('legend') && field.getAttribute('aria-labelledby');
-  ((heading && document.getElementById(heading)) || field).scrollIntoView({ block: 'start' }); // the top bar is kept clear (scroll-padding-top)
+  scrollUnderBar((heading && document.getElementById(heading)) || field);
   return field;
+}
+
+// Puts `el` a little under the top bar (the page's, or a panel's), worked out by hand
+// rather than left to scrollIntoView's options and scroll-padding, which Safari's engine,
+// also behind Firefox on an iPhone, hasn't always honoured (BUGS.md 4).
+function scrollUnderBar(el) {
+  const panel = el.closest('dialog');
+  const bar = (panel ?? document).querySelector('.topbar');
+  const clear = Math.max(bar ? bar.getBoundingClientRect().bottom : 0, 0) + 16;
+  const by = Math.round(el.getBoundingClientRect().top - clear);
+  if (panel) panel.scrollTop += by;
+  else window.scrollBy(0, by);
 }
 
 export function notice(...children) {

@@ -145,6 +145,18 @@ All eight, in `QUIPS` in strings.js. The first that applies is shown, checked in
 7. A quarter or more settled: "Wobbling, climbing, still here."
 8. Otherwise, steps on the ladder but under a quarter settled: "One foot on the ladder. That counts."
 
+### The Step screen's lines and the one-step-at-a-time words (Q145, Q146), for Fran to rewrite
+
+The five lines under the Step screen's strip, one for each state (`STEP.now`):
+
+1. Rehearsing: "Rehearse with your distractor on, press +1 each time, and when you reach your number the step is ready."
+2. Ready: "Go and do it in the real world. When you have, come back and press Log an attempt."
+3. Settled: "Done. Add the next step from the Ladder."
+4. Planning: "Too big for now. Edit it smaller, then rehearse."
+5. Didn't stay: "Make the next step smaller, then rehearse that one."
+
+Also new, all Fran's words: the strip's stages, "Plan", "Rehearse", "Ready", "Do it", "Log it" (`STEP.stages`); the line under the goal on the Ladder, "One step at a time: rehearse it, do it, log it, then add the next one." (`LADDER.oneAtATime`); and the question before a second step, "You've already got a step on the go: [title]. The ladder works one step at a time. Finish that one first?", with "Go to that step" and "Add another anyway" (`LADDER.onTheGo`, `.goToStep`, `.addAnyway`).
+
 ## 3. Builder's calls, not in PLAN.md or the answers
 
 - With nobody there, Suggest doesn't offer "Can see them" (it is fixed at "not at all", Q8). Moving from nobody to one person presets "Can see them" to clearly, which the person can change on the form; the suggestion card shows it. That is Fran's change to answer 8 (BUGS.md 5), not a builder's call.
@@ -212,6 +224,19 @@ Set a new goal and the earlier ladders
 - The wobble and the didn't-stay quip read only the current ladder's attempts, so a new ladder's jelly wobbles fully until its first stay there.
 - Earlier ladders sit at the foot of the Ladder, under "Ladders you've finished", newest ladder first. Each has its goal as a heading (no end date), then its steps, newest first, in the quiet look whatever their state.
 - A step from an earlier ladder opens read-only: title, values, date, state, "From a ladder you finished", Show the text if it has text, and its attempts with their notes but no Delete. No rehearsal counter, Log an attempt, Edit or Delete. Back goes to the Ladder.
+
+### The step strip, one step at a time, and the jelly elsewhere (Q145 to Q147)
+
+- The strip and its line sit under the step's title, so the title still comes first and a screen reader reads them straight after it. The current stage is an orange pill and is marked for screen readers as the current step; the stages before it are in the text colour, the ones after in grey.
+- Which stage each state is at: planning, Plan; rehearsing, Rehearse; ready, Ready; settled and didn't stay, Log it, since the step has been done and logged. On a settled step every stage counts as done. "Do it" is never the marked stage: the app can't know when the person is out doing it.
+- A step on a finished ladder has no strip and no line: it can't be changed, and the lines tell the person what to do next.
+- The Ladder's one-step line sits under the progress line, so the goal and its progress stay together. It shows always, also with no steps and on a complete ladder.
+- The step "on the go" is the one at the top of the Ladder: the most recently made step that is planning, rehearsing or ready. The question comes only from Add a step, not from Suggest a step. Go to that step is the button picked first; dismissing the question (Escape, or the phone's back) stays on the Ladder.
+- The jelly beside the strip wobbles fully while the step is planning, rehearsing or didn't stay, half as much once it is ready, and not at all once settled.
+- The Welcome screen and the replies show the part of the Ladder's scene around the ladder, larger: the floor, the ladder, the stage's edge and the first of the audience. On Welcome the jelly stands on the bottom rung, legs wobbling.
+- The replies don't follow the person's real place on their ladder. After an easy stay (reply four) the jelly climbs from the fourth rung to the fifth, one leg lifted and leaning up the ladder, then stands there. After a hard stay (replies two and three) it sits on the fourth rung, legs hanging, not wobbling. After a didn't stay (reply one) it stands on the floor at the foot of the ladder, looking up, smiling, legs wobbling a little. The reply that completes a ladder is an easy stay, so the jelly climbs; it isn't shown at the lectern there.
+- On Breathe the jelly glows and grows from its feet, so it swells upwards and settles back down; its legs don't wobble. Start and Stop work as before.
+- With less motion asked for, no jelly moves anywhere: the Welcome jelly and the step jelly stand still, the reply jelly is already in its place, and the Breathe jelly sits at its smallest with no Start button.
 
 ## 4. Not built yet
 

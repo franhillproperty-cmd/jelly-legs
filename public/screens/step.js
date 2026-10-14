@@ -10,6 +10,9 @@ import {
 import { rowText, timesText, stateText, formatDate, changeText, undoText, turnDownChoice } from '../format.js';
 import { now, today } from '../store.js';
 import { signpost } from './parts.js';
+import { createJelly } from '../jelly.js';
+import { createScene, LADDER_VIEW } from '../scene-draw.js';
+import { stepJellyWobble, replyScene } from '../scene.js';
 
 const capitalise = s => s.charAt(0).toUpperCase() + s.slice(1);
 const number = v => (String(v).trim() === '' ? null : Number(v));
@@ -281,6 +284,24 @@ function planningMessage(advice, step) {
 
 // ---------------------------------------------------------------- the Step screen
 
+// Where the step is (Q145): Plan, Rehearse, Ready, Do it, Log it, the current stage marked,
+// the ones before it done. A settled step has done them all. Beside it, the jelly, small,
+// wobbling while the step is still to do and still once it has settled (Q147); under it,
+// what to do now.
+function whereTheStepIs(step) {
+  const at = R.STAGES.indexOf(R.stepStage(step));
+  const all = step.state === 'settled';
+  return [
+    h('div', { class: 'stage-row' },
+      createJelly({ wobble: stepJellyWobble(step) }),
+      h('ol', { class: 'stages' }, R.STAGES.map((key, i) => h('li', {
+        class: i < at || all ? 'done' : null,
+        'aria-current': i === at ? 'step' : null,
+      }, h('span', {}, STEP.stages[key]))))),
+    h('p', { class: 'stage-line' }, STEP.now[step.state]),
+  ];
+}
+
 const attemptsOn = (data, step) => data.attempts.filter(a => a.stepId === step.id).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
 // The pasted text, to rehearse from the screen (Q69). It stays open across +1 presses.
@@ -430,6 +451,7 @@ export function stepScreen(app, { id }) {
     after,
     node: h('div', { class: 'step' },
       h('h1', {}, step.title),
+      whereTheStepIs(step),
       h('p', { class: 'values' }, rowText(step, data.person.pace)),
       step.when ? h('p', { class: 'date' }, formatDate(step.when)) : null,
       h('p', { class: `state state-${step.state}` }, stateText(step.state)),
@@ -551,14 +573,21 @@ export function replyScreen(app) {
     delete app.flash.reply;
     app.go('ladder', { replace: true });
   };
+  // The jelly, larger, in a pose that matches the reply (Q147).
+  const look = replyScene(r.reply);
+  const scene = createScene(look.from);
+  scene.element.setAttribute('viewBox', LADDER_VIEW);
   return {
     node: h('div', { class: 'reply' },
+      scene.element,
       h('p', { class: 'lead', tabindex: '-1' }, REPLIES[r.reply]),
       r.advice ? adviceNodes(r.advice, r.step, { nextTime: true }) : null,
       r.completed ? h('p', { class: 'completion' }, COMPLETE.message) : null,
       button(COMMON.ok, done, { primary: true })),
-    // A step that has just settled gets a moment of confetti (the look stage), once.
+    // The climb shows as a move, two frames on. A step that has just settled gets a moment
+    // of confetti (the look stage), once.
     after: () => {
+      if (look.to !== look.from) requestAnimationFrame(() => requestAnimationFrame(() => scene.update(look.to)));
       if (!r.settled || r.celebrated) return;
       r.celebrated = true;
       confetti();

@@ -788,3 +788,14 @@ The goal switch, the heading over the old ladders, the line on a step from one o
 **144. The builder's calls in the ladder-complete work.** (138 to 142, Q52)
 Six calls made while building: completion worked out fresh each time, so deleting the settling attempt, changing the goal step's dials or unmarking it undoes it; a new ladder starts afresh for the too-big notice, the friends line, the floor and Suggest; the plus two carries across ladders (Q133); a goal typed in Settings is rated under that day's date without moving the check-in clock, and that first rating is its "when you started"; the labels in square brackets (since worded, 143); the stored data moves to version 2, and data already on a phone is upgraded when the app opens.
 **Answer:** All six decisions stand.
+
+**145. Where a step is, on its Step screen.** (L99, L100)
+The Step screen showed the step's state as one word, with nothing saying what comes next.
+**Answer:** The Step screen gets a short progress strip at the top showing where the step is: Plan → Rehearse → Ready → Do it → Log it, with the current stage marked. Under it, one line that changes with the state. Rehearsing: 'Rehearse with your distractor on, press +1 each time, and when you reach your number the step is ready.' Ready: 'Go and do it in the real world. When you have, come back and press Log an attempt.' Settled: 'Done. Add the next step from the Ladder.' Planning: 'Too big for now. Edit it smaller, then rehearse.' Didn't stay: 'Make the next step smaller, then rehearse that one.'
+
+**146. One step at a time.** (L91, L93)
+Nothing on the Ladder said that the ladder is climbed one step at a time, and Add a step could start a second step while one was still on the go.
+**Answer:** The Ladder gets one line under the goal, always visible: 'One step at a time: rehearse it, do it, log it, then add the next one.' And when a person presses Add a step while they already have a step in planning, rehearsing or ready, show a message first: 'You've already got a step on the go: [title]. The ladder works one step at a time. Finish that one first?' with buttons 'Go to that step' and 'Add another anyway'. ([title] is the step's own title, a live value, as in Q128.)
+
+**147. The jelly beyond the Ladder.**
+**Answer:** The jelly appears on the Welcome screen, large, at the bottom of the ladder; the Breathe screen's circle becomes the jelly, swelling and settling with the breath; the Step screen shows the jelly small beside the progress strip, wobbling in rehearsing and still once settled; the reply screens after an attempt show the jelly in a state matching the reply (climbing for settled, sitting on a rung for hard, at the foot of the ladder for didn't stay, no sad face). All original, inline SVG, reduced-motion respected.

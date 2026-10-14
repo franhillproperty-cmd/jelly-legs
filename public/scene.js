@@ -1,6 +1,6 @@
 // The Ladder's scene (the look stage): where the jelly is, how much its legs wobble, and
-// which quip goes under it. Pure functions of the stored data, so they can be tested.
-// The drawing itself is in scene-draw.js.
+// which quip goes under it; and the jelly on the Step screen and the replies (Q147). Pure
+// functions, so they can be tested. The drawings are in scene-draw.js and jelly.js.
 
 import { EASY_LINE, ladderComplete } from './rules.js';
 
@@ -42,4 +42,24 @@ function quipFor({ total, settled, position, atTop, complete, lastAttempt }) {
   if (position >= 0.5) return 'halfway';
   if (position >= 0.25) return 'quarter';
   return 'firstStep';
+}
+
+// The small jelly beside a Step screen's strip (Q147): wobbling while the step is still to
+// do, half as much once it is ready, still once it has settled.
+export function stepJellyWobble(step) {
+  return step.state === 'settled' ? 0 : step.state === 'ready' ? 0.5 : 1;
+}
+
+// The jelly on a reply, matching it and never sad (Q147): climbing a rung after a stay that
+// settled the step; sitting on a rung after a hard stay; standing at the foot of the ladder,
+// looking up, after a didn't stay. `from` is drawn first and `to` straight after, so the
+// climb shows as a move.
+export function replyScene(reply) {
+  if (reply === 'easy') return { from: { position: 3 / 8, pose: 'climb', wobble: 0 }, to: { position: 4 / 8, pose: 'climb', wobble: 0 } };
+  if (reply === 'didntStay') {
+    const foot = { place: 'floor', wobble: 0.5 };
+    return { from: foot, to: foot };
+  }
+  const sitting = { position: 3 / 8, pose: 'sit', wobble: 0 }; // hard, and hard again
+  return { from: sitting, to: sitting };
 }

@@ -2,8 +2,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { sceneState } from '../public/scene.js';
-import { QUIPS } from '../public/strings.js';
+import { sceneState, stepJellyWobble, replyScene } from '../public/scene.js';
+import { QUIPS, STEP } from '../public/strings.js';
+import * as R from '../public/rules.js';
 
 let clock = 0;
 const at = () => new Date(Date.UTC(2026, 9, 13, 8, 0, clock++)).toISOString();
@@ -99,5 +100,43 @@ describe('The quip, chosen by progress', () => {
   it('a didn\'t stay on an earlier ladder\'s step doesn\'t count', () => {
     assert.equal(sceneState(data(['rehearsing', 'rehearsing'], [attempt(false, 8, 'earlier')])).quip, 'firstStep');
     assert.equal(sceneState(data(['rehearsing', 'rehearsing'], [attempt(false, 8)])).quip, 'didntStay');
+  });
+});
+
+describe('The Step screen: where the step is, and its jelly (Q145, Q147)', () => {
+  it("each state is at one stage of Plan, Rehearse, Ready, Do it, Log it; settled and didn't stay are at Log it", () => {
+    assert.deepEqual(R.STATES.map(state => R.stepStage({ state })), ['plan', 'rehearse', 'ready', 'logIt', 'logIt']);
+    assert.deepEqual(R.STAGES, ['plan', 'rehearse', 'ready', 'doIt', 'logIt']);
+  });
+
+  it('every stage has its label and every state its line', () => {
+    for (const key of R.STAGES) assert.ok(STEP.stages[key], key);
+    for (const state of R.STATES) assert.ok(STEP.now[state], state);
+  });
+
+  it('the jelly wobbles while the step is still to do, half as much when ready, not at all once settled', () => {
+    assert.deepEqual(R.STATES.map(state => stepJellyWobble({ state })), [1, 1, 0.5, 0, 1]);
+  });
+});
+
+describe('The jelly on the replies, never sad (Q147)', () => {
+  it('climbing a rung after an easy stay', () => {
+    const { from, to } = replyScene('easy');
+    assert.deepEqual([from.pose, to.pose], ['climb', 'climb']);
+    assert.ok(to.position > from.position);
+  });
+
+  it('sitting on a rung after a hard stay, and again after a second one', () => {
+    for (const reply of ['hard', 'hardAgain']) {
+      const { from, to } = replyScene(reply);
+      assert.equal(from.pose, 'sit', reply);
+      assert.deepEqual(from, to);
+    }
+  });
+
+  it("at the foot of the ladder after a didn't stay", () => {
+    const { from, to } = replyScene('didntStay');
+    assert.equal(from.place, 'floor');
+    assert.deepEqual(from, to);
   });
 });

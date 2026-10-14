@@ -4,6 +4,7 @@ import * as R from '../rules.js';
 import { h, paragraphs, button, ask, notice } from '../ui.js';
 import { BREATHE, SETUP, WEEKDAY_INITIALS, WEEKDAYS } from '../strings.js';
 import { formatDate } from '../format.js';
+import { createJelly } from '../jelly.js';
 import { today } from '../store.js';
 
 function weekday(ymd) {
@@ -44,11 +45,11 @@ export function breatheScreen(app) {
     if (app.save({ ...app.data(), breathing })) app.say(encouragementText(R.breathingCount(breathing, day)));
   };
 
-  // A glowing circle to breathe with: it swells twice (the breath in, then the short sip
-  // to fill right up), sinks slowly for about six seconds (the long breath out), and
+  // The jelly, glowing, to breathe with (Q147): it swells twice (the breath in, then the
+  // short sip to fill right up), settles slowly for about six seconds (the long breath out), and
   // repeats while it's going. Still, with no control, when the phone asks for less motion.
   const going = app.flash.breathCircle === true;
-  const circle = h('div', { class: `breath ${going ? 'is-going' : ''}`, 'aria-hidden': 'true' }, h('div', { class: 'breath-glow' }));
+  const circle = h('div', { class: `breath ${going ? 'is-going' : ''}`, 'aria-hidden': 'true' }, h('div', { class: 'breath-jelly' }, createJelly()));
   const control = button(going ? BREATHE.stop : BREATHE.start, () => {
     const on = !circle.classList.contains('is-going');
     circle.classList.toggle('is-going', on);
